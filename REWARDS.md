@@ -1,6 +1,6 @@
 # 微软积分：Egern 完整迁移版
 
-**文件：`micsoft.js`。支持 generic 小组件、schedule 定时任务和配套 request Cookie 获取入口。**
+**文件：`microsoft-rewards.js`。支持 generic 小组件、schedule 定时任务和配套 request Cookie 获取入口。**
 
 想在手机上自动获取 Cookie，请先阅读 [Cookie 自动获取安装说明](COOKIE-CAPTURE.md)，安装配套模块并更新本 JS。使用自动获取时，下面的两项 Cookie Env 可留空；已有非空手填值仍优先。
 
@@ -8,7 +8,7 @@
 
 ## 1. 先安装查询小组件
 
-Egern → 工具 → 脚本 → 添加 **generic**，名称 `ms-rewards-widget`，文件（可下载为本地，或使用 README 中的远程地址） `micsoft.js`。粘贴脚本全部内容。
+Egern → 工具 → 脚本 → 添加 **generic**，名称 `ms-rewards-widget`，本地文件 `microsoft-rewards.js`。粘贴脚本全部内容。
 
 在 Env 填入：
 
@@ -24,7 +24,7 @@ Egern → 工具 → 脚本 → 添加 **generic**，名称 `ms-rewards-widget`�
 
 ## 2. 添加定时任务
 
-新增 **schedule** 脚本 `ms-rewards-worker`，选择同一个文件（可下载为本地，或使用 README 中的远程地址） `micsoft.js`，cron 为 `*/20 * * * *`，超时 `180` 秒。配置片段见 `config-snippet.yaml`（打包后叫 `rewards-config-snippet.yaml`），只能合并对应字段，不要替换整个代理配置。
+新增 **schedule** 脚本 `ms-rewards-worker`，选择同一个本地文件 `microsoft-rewards.js`，cron 为 `*/20 * * * *`，超时 `180` 秒。配置片段见 `config-snippet.yaml`（打包后叫 `rewards-config-snippet.yaml`），只能合并对应字段，不要替换整个代理配置。
 
 定时脚本 Env：
 
@@ -73,4 +73,51 @@ YAML 示例的定时任务初始 `disabled: true`。填好 Env、确认查询正
 
 已在 Node.js 模拟 Egern ctx，测试各任务请求、开关、续期、回执、地区锁、凭据跳转保护、存储失败、缓存与零额度等边界。未向真实微软账号发送积分任务请求，未验证 iOS 后台调度、共享存储、实际到账和原生排版。迁移代码可供手机验证，不能将模拟接口通过表述为“已实测全自动到账”。
 
-源文件未声明许可证，迁移保留原作者署名与来源，不重新标为 MIT。
+源文件未声明许可证，本次是本地迁移交付，未发布到公共仓库。
+
+## 6. Worker v7：App 搜索记录与网页活动 404
+
+### 搜索与阅读不是同一额度
+
+2026-09-28 用户截图中“搜索以赚取 60”已完成，“阅读以赚取 3/30”仍在进行；今日 93/120 的剩余 27 分对应阅读。这些截图没有单列手机搜索额度，不能把阅读 3/30 当作手机搜索 3/30。
+
+此前本人提供的 Bing HAR 在 `/dapi/me` 返回 `type=search`、`offerid=WW_search_global_NewLevel3`、progress=60、max=60。v7 在已有 App 查询成功时提取这一类通用搜索记录；不增加额外 OAuth 请求，不把它映射成独立手机额度，也不据此强行提交手机搜索。
+
+当网页缺少手机额度且有同一天、未超过一小时的有效 App 记录，大尺寸/中尺寸显示“App 搜索（上次记录）”。若真实独立手机额度存在，继续使用原有计数器。阅读开关关闭、App 查询失败或记录过期时，可能仍显示未知；不采用历史 HAR 数值作为运行时默认值。
+
+### 404 尚需当前请求证据
+
+现有 `/earn` 活动使用原脚本固定 `next-action`。404 可能与 action 标识、路由或网页部署变化有关，当前证据不能区分。不要把其他操作（例如 dashboard 领取总积分）的 action 标识填到此字段，它们参数不同。
+
+用电脑登录同一账户的 Rewards 网页，按 F12 → Network，正常打开一项尚未完成的网页活动，找到相关 POST 请求。核对：
+
+- 请求网址的主机和路径（无需查询参数）。
+- 响应状态码。
+- 请求头 `next-action` 的值。
+- 请求体是否仍为三项数组，第三项包含 `offerid`。只需确认结构，不需要分享完整请求体。
+
+如果确认是同一 `/earn` 活动接口，参数结构兼容，并且网页操作成功，将当前 `next-action` 的值填入 worker Env 的 `EARN_ACTION_ID`。如果网页也 404，或路径/结构已改变，需继续分析，不能只替换 hash。不要发 Cookie、Authorization 或完整 HAR。
+
+v7 会记录被 404 拒绝的 action 标识，当日停止用同一标识继续提交 earn 卡片；仍可处理其他可执行活动。修改 EARN_ACTION_ID 后，只有明确记录了 HTTP 404 的任务允许重试，历史尝试会保留。超时、网络错误和旧版已留下的“待确认”记录不盲目重试；旧版记录缺少 HTTP 状态时，不能自动判定未执行，次日新状态再处理，不要改 ACCOUNT_ID 清空记录。
+
+v7 没有自动发现当前网页 action，也未验证真实活动到账。安装时覆盖仓库 micsoft.js 并刷新小组件和 worker 的远程脚本缓存，原 Auth v1 模块无需变更；原有 Cookie、OAuth 与 ACCOUNT_ID 保持。
+
+调查参考：[原脚本 #5979](https://scriptcat.org/zh-CN/script-show-page/5979)、[公开客户端的网页接口实现](https://github.com/chiihero/Microsoft-Rewards-Script/blob/main/src/browser/BrowserFunc.ts)。新逻辑按已观察的数据独立编写，未复制该参考仓库的实现。
+
+## 7. Worker v8：已取得当前网页真实活动请求
+
+2026-09-28 经用户授权直接操作其已登录的 Edge，读取当前部署 `20260921-4` 的公开 chunk，并正常打开“体型巨大且有力的鸟类”任务。观察到 `POST https://rewards.bing.com/earn` 返回 200、网页任务变为 15 已完成、今日积分从 236 增至 251。
+
+当前 `reportActivity` 的 `next-action`：
+
+```text
+707e6eb15bdfdd5fba193f0a77e934f7018faf87ce
+```
+
+真实请求仍为三项数组 `[hash,11,{offerid,isPromotional:"$undefined",timezoneOffset:"-480"}]`。v8 已更新默认 action，补上观察到的 earn 路由树请求头，并从本轮 earn HTML 的静态脚本 URL 提取 `dpl` 作为 `x-deployment-id`；没有提取到部署号时不伪造旧部署号。
+
+覆盖 GitHub 的 micsoft.js 并更新手机脚本缓存。若 worker Env 曾填写旧的 EARN_ACTION_ID，删除此项以采用新版默认值，或改成上面的新值；其他凭据不变。通知应显示 Worker v8。模块不需要更新。
+
+保留 v7 的已拒绝任务重试规则。v5/更早版本留下的待确认记录没有 HTTP 状态，不会因升级自动清空；这些记录当日可能仍等待确认，次日使用新日状态。不要更换 ACCOUNT_ID 或删除全部记录来强行重跑。
+
+已实测的是 Edge 的正常网页活动及所得请求，不是 iOS 定时任务执行；手机 v8 仍需运行验证。以后微软重新部署可能再次更改 action，可用 Env 覆盖；本版不自动扫描所有网页脚本寻找 action。

@@ -369,3 +369,4 @@ function mrWidget(ctx,snap,state,status){
   return {type:'widget',url:MR_WEB+'/',padding:small?12:14,gap:small?5:large?10:7,backgroundGradient:{type:'linear',colors:['#101F39','#1A3353'],startPoint:{x:0,y:0},endPoint:{x:1,y:1}},refreshAfter,children};
 }
 function mrError(ctx,message){return {type:'widget',url:MR_WEB+'/',padding:ctx.widgetFamily?.startsWith('accessory')?0:14,gap:8,children:[mrTxt('Microsoft Rewards',14,'#74AFFF'),mrTxt(message,11,undefined,{maxLines:4})],refreshAfter:new Date(Date.now()+300000).toISOString()};}
+
