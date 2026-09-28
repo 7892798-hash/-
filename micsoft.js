@@ -1,1215 +1,225 @@
-// ==UserScript==
-// @name         微软积分商城签到（改进版）
-// @namespace    https://geoisam.github.io
-// @version      3.6.29
-// @description  每天在后台自动完成 Microsoft Rewards 任务获取积分奖励，✅搜索、✅活动、✅阅读、✅签入
-// @author       geoisam@qq.com
-// @icon         data:image/png;base64,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
-// @homepage     https://github.com/geoisam/FuckScripts
-// @supportURL   https://github.com/geoisam/FuckScripts/issues
-// @crontab      */20 * * * *
-// @connect      bing.com
-// @connect      login.live.com
-// @connect      rewards.bing.com
-// @connect      prod.rewardsplatform.microsoft.com
-// @connect      hotapi.nntool.cc
-// @connect      hot.baiwumm.com
-// @connect      cnxiaobai.com
-// @connect      disp-qryapi.3g.qq.com
-// @connect      qyapi.weixin.qq.com
-// @connect      oapi.dingtalk.com
-// @connect      open.feishu.cn
-// @connect      push.i-i.me
-// @connect      api.day.app
-// @grant        unsafeWindow
-// @grant        GM_xmlhttpRequest
-// @grant        GM_notification
-// @grant        GM_openInTab
-// @grant        GM_getValue
-// @grant        GM_setValue
-// @grant        GM_cookie
-// @grant        GM_info
-// @grant        GM_log
-// @tips         此脚本一直为 开源免费 使用，如果你是从某些地方买的话，你就是被骗了
-// ==/UserScript==
+/* Microsoft Rewards for Egern — personal migration of ScriptCat #5979 v3.6.90.
+ * Source author: zxwbn@foxmail.com / zxwbn01; source has no declared license.
+ * See README.md for source provenance, configuration and verification limits.
+ * Generic execution only queries/renders. Schedule execution runs bounded tasks.
+ */
+const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
+const MR_APP='https://prod.rewardsplatform.microsoft.com';
+const MR_SCOPE='service::prod.rewardsplatform.microsoft.com::MBI_SSL';
+const MR_PC='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/123.0.0.0 Safari/537.36 Edg/123.0.2420.81';
+const MR_MOBILE='Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/123.0.0.0 Mobile Safari/537.36 EdgA/123.0.2420.102';
 
+export default async function(ctx){
+  const e=ctx.env||{},account=String(e.ACCOUNT_ID||'default').trim(),prefix='msrewards:v1:'+account+':';
+  const r={ctx,e,prefix,deadline:Date.now()+160000};
+  const scheduled=typeof ctx.cron==='string'&&ctx.cron.length>0;
+  let lockId=null;
+  try{
+    if(scheduled){
+      const lock=mrLoad(r,'lock');if(lock?.until>Date.now())return;
+      lockId=mrId();mrSave(r,'lock',{id:lockId,until:Date.now()+200000});
+      if(mrLoad(r,'lock')?.id!==lockId)return;
+    }
+    const day=mrDay(e.TIMEZONE||'Asia/Shanghai');
+    let state=mrLoad(r,'state');if(!state||state.day!==day)state={day,actions:{},notes:{},searchIndex:0,searchMisses:0};
+    let snapshot;
+    try{snapshot=await mrSnapshot(r);mrSave(r,'snapshot',snapshot);}
+    catch(err){
+      const old=mrLoad(r,'snapshot');
+      if(!scheduled&&!err.auth&&old&&Date.now()-old.at<86400000)return mrWidget(ctx,old,state,'离线缓存');
+      throw err;
+    }
+    if(!scheduled)return mrWidget(ctx,snapshot,state,'服务端数据');
+    if(!['SIGN','READ','PROMOS','SEARCH'].some(k=>mrEnabled(e,'TASK_'+k)))return;
+    if(mrEnabled(e,'LOCK_CN')){
+      const html=await mrRequest(r,'GET',MR_BING+'/','bing');
+      const country=html.match(/RevIpCC\s*:\s*"([A-Za-z]{2})"/)?.[1]?.toUpperCase();
+      if(country!=='CN')throw Error(country?'地区锁定：当前为 '+country:'无法确认地区，本轮任务未执行');
+    }
+    // Always save before any action; a broken/full ledger fails closed.
+    mrSave(r,'state',state);
+    for(const [flag,task] of [['SIGN',mrSign],['READ',mrRead],['PROMOS',mrPromos],['SEARCH',mrSearch]]){
+      if(!mrEnabled(e,'TASK_'+flag)){state.notes[flag]='已关闭';continue;}
+      if(Date.now()>r.deadline-20000){state.notes[flag]='本轮时间不足，下轮继续';continue;}
+      try{await task(r,state,snapshot);}catch(err){state.notes[flag]=mrMessage(err);}
+      mrSave(r,'state',state);
+    }
+    // Never infer points from submitted task count.
+    try{snapshot=await mrSnapshot(r);mrSave(r,'snapshot',snapshot);for(const p of [...snapshot.promos,...snapshot.earnTasks]){const action=state.actions['promo:'+p.id];if(action&&p.complete){action.status='活动已确认';state.notes.PROMOS='活动已确认（服务端）';}}}catch{state.notes.QUERY='任务后查询失败，保留上次数据';}
+    state.lastRun=Date.now();mrSave(r,'state',state);
+    if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards',body:'余额 '+mrNumber(snapshot.balance)+'；'+Object.values(state.notes).join(' · ')});
+  }catch(err){
+    const message=mrMessage(err);
+    if(scheduled){try{mrSave(r,'lastError',{message,at:Date.now()});}catch{}if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards 需要处理',body:message});return;}
+    return mrError(ctx,message);
+  }finally{
+    if(scheduled&&lockId){try{if(mrLoad(r,'lock')?.id===lockId)mrSave(r,'lock',{until:0});}catch{}}
+  }
+}
+function mrEnabled(e,key,fallback=true){const v=e[key];return v===undefined||v===''?fallback:!['false','0','off','no'].includes(String(v).toLowerCase());}
+function mrLoad(r,key){const raw=r.ctx.storage.get(r.prefix+key);if(!raw)return null;try{return JSON.parse(raw);}catch{throw Error('本地状态损坏，请更换 ACCOUNT_ID 后重新配置');}}
+function mrSave(r,key,value){r.ctx.storage.set(r.prefix+key,JSON.stringify(value));}
+function mrDay(tz){return new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+function mrId(){if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID();return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const n=Math.floor(Math.random()*16);return(c==='x'?n:(n&3)|8).toString(16);});}
+function mrMessage(e){return e?.safe||e?.message==='本地状态损坏，请更换 ACCOUNT_ID 后重新配置'?String(e.safe||e.message):/^(缺少|请|本地|地区|无法|服务端|授权|登录|数据|网页|积分|本轮)/.test(e?.message||'')?e.message:'请求失败或存储不可用，请检查网络及 Egern 日志';}
+function mrFault(message,auth=false){const e=Error(message);e.safe=message;e.auth=auth;return e;}
+function mrForm(obj){return Object.entries(obj).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(String(v))).join('&');}
+async function mrRequest(r,method,url,kind,body,headers={}){
+  const host=new URL(url).hostname;
+  if(!['rewards.bing.com','www.bing.com','prod.rewardsplatform.microsoft.com','login.live.com'].includes(host))throw mrFault('请求域名不在迁移脚本允许列表中');
+  if(Date.now()>r.deadline-2000)throw mrFault('本轮执行时间已用尽');
+  const h={'User-Agent':kind==='app'?MR_MOBILE:MR_PC,...headers};
+  if(kind==='web'||kind==='bing'){
+    const cookie=kind==='web'?r.e.REWARDS_COOKIE:r.e.BING_COOKIE;
+    if(!cookie)throw mrFault('缺少 '+(kind==='web'?'REWARDS_COOKIE':'BING_COOKIE')+'，请在手机 Env 填写');
+    h.Cookie=headers.Cookie||cookie;
+  }
+  // Explicit cookie routing. Never let redirects forward credentials off-domain.
+  const options={headers:h,timeout:Math.min(8000,r.deadline-Date.now()),credentials:'omit',redirect:'manual',...(body!==undefined?{body}:{}),...(r.e.POLICY?{policy:r.e.POLICY}:{})};
+  const resp=await r.ctx.http[method.toLowerCase()](url,options);
+  if(resp.status===401||resp.status===403)throw mrFault('登录或授权已过期（HTTP '+resp.status+'），请更新对应凭据',true);
+  if(resp.status>=300&&resp.status<400)throw mrFault('登录跳转：请更新 Cookie 后重试',true);
+  if(resp.status<200||resp.status>=300)throw mrFault('数据源 HTTP '+resp.status);
+  return await resp.text();
+}
+function mrJson(text){try{return JSON.parse(text);}catch{throw mrFault('数据源没有返回有效 JSON，可能需要重新登录',true);}}
+function mrNumeric(value){return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):null;}
+function mrCounter(list){if(!Array.isArray(list)||!list.length)return {current:null,max:null};let current=0,max=0;for(const x of list){const c=mrNumeric(x.pointProgress),m=mrNumeric(x.pointProgressMax??x.pointMax);current=current===null||c===null?null:current+c;max=max===null||m===null?null:max+m;}return {current,max};}
+function mrEmbedded(html,key){
+  const needle='"'+key+'"',at=html.indexOf(needle);if(at<0)return null;
+  const colon=html.indexOf(':',at+needle.length);if(colon<0)return null;let start=colon+1;while(/\s/.test(html[start]||''))start++;
+  if(!['{','['].includes(html[start]))return null;
+  let depth=0,string=false,escape=false;
+  for(let i=start;i<html.length;i++){const c=html[i];if(string){if(escape)escape=false;else if(c==='\\')escape=true;else if(c==='"')string=false;continue;}if(c==='"')string=true;else if(c==='{'||c==='[')depth++;else if(c==='}'||c===']'){if(--depth===0){try{return JSON.parse(html.slice(start,i+1));}catch{return null;}}}}
+  return null;
+}
+function mrEarn(html){
+  const clean=String(html).replace(/\\"/g,'"'),p=mrEmbedded(clean,'pointsCounters'),balance=clean.match(/"(?:balance|availablePoints)"\s*:\s*(\d+)/);
+  if(!p||!balance)return null;
+  return {balance:Number(balance[1]),pc:{current:mrNumeric(p.pc?.progress),max:mrNumeric(p.pc?.max)},mobile:{current:mrNumeric(p.mobile?.progress),max:mrNumeric(p.mobile?.max)},today:mrNumeric(p.totalPoints??p.dailyOffer)};
+}
+async function mrSnapshot(r){
+  let html='',earn=null,api=null,webError;
+  try{html=await mrRequest(r,'GET',MR_WEB+'/earn','web');earn=mrEarn(html);}catch(e){webError=e;}
+  try{const j=mrJson(await mrRequest(r,'GET',MR_WEB+'/api/getuserinfo?type=1&X-Requested-With=XMLHttpRequest','web',undefined,{'X-Requested-With':'XMLHttpRequest',Referer:MR_WEB+'/'}));api=j.dashboard||j;if(!api.userStatus)api=null;}catch(e){webError=e;}
+  if(!earn&&!api)throw webError||mrFault('登录状态无效，未取得积分数据',true);
+  const u=api?.userStatus||{},c=u.counters||{},day=mrDay(r.e.TIMEZONE||'Asia/Shanghai'),d=day.split('-');
+  const dailyKey=d.length===3?d[1]+'/'+d[2]+'/'+d[0]:'';
+  const promos=[...(api?.dailySetPromotions?.[dailyKey]||[]),...(api?.morePromotions||[])].filter(p=>p.priority>-2&&p.exclusiveLockedFeatureStatus!=='locked');
+  const out={balance:mrNumeric(u.availablePoints),pc:mrCounter(c.pcSearch),mobile:mrCounter(c.mobileSearch),today:mrCounter(c.dailyPoint).current,...earn,level:u.levelInfo?.activeLevel||'',promos:promos.map(p=>({id:p.offerId,hash:p.hash,title:p.title||p.offerId,complete:!!p.complete})),at:Date.now(),day};
+  out.earnTasks=mrEarnTasks(html);return out;
+}
+function mrEarnTasks(html){
+  const clean=String(html).replace(/\\"/g,'"'),cards=mrEmbedded(clean,'activityCards'),result=[],seen=new Set();
+  const walk=x=>{if(!x||typeof x!=='object')return;if(x.offerId&&x.hash&&typeof x.isCompleted==='boolean'&&!seen.has(x.offerId)){seen.add(x.offerId);result.push({id:x.offerId,hash:x.hash,complete:x.isCompleted,title:x.title||x.offerId});}for(const v of Object.values(x))if(v&&typeof v==='object')Array.isArray(v)?v.forEach(walk):walk(v);};
+  walk(cards);return result;
+}
+async function mrToken(r){
+  const revision=String(r.e.AUTH_REVISION||'1'),saved=mrLoad(r,'oauth'),old=String(saved?.revision||'1')===revision?saved:null;
+  if(old?.access&&old.expires>Date.now()+60000)return old.access;
+  const refresh=old?.refresh||r.e.REFRESH_TOKEN;
+  let payload={client_id:'0000000040170455'};
+  if(refresh)payload={...payload,refresh_token:refresh,scope:MR_SCOPE,grant_type:'refresh_token'};
+  else{
+    let code=String(r.e.AUTH_CODE||'').trim();if(code.includes('://')){try{code=new URL(code).searchParams.get('code')||'';}catch{code='';}}
+    if(!code)throw mrFault('缺少 AUTH_CODE 或 REFRESH_TOKEN；签入和阅读需要 OAuth 授权');
+    payload={...payload,code,redirect_uri:'https://login.live.com/oauth20_desktop.srf',grant_type:'authorization_code'};
+  }
+  const raw=await mrRequest(r,'POST','https://login.live.com/oauth20_token.srf','oauth',mrForm(payload),{'Content-Type':'application/x-www-form-urlencoded'}),j=mrJson(raw);
+  if(!j.access_token)throw mrFault('授权更新失败，请重新获取 AUTH_CODE',true);
+  mrSave(r,'oauth',{access:j.access_token,refresh:j.refresh_token||refresh,revision,expires:Date.now()+Math.max(60,Number(j.expires_in)||3600)*1000});return j.access_token;
+}
+async function mrApp(r,method,path,body){
+  const access=await mrToken(r),country=String(r.e.COUNTRY||'cn').toLowerCase();
+  return mrJson(await mrRequest(r,method,MR_APP+path,'app',body===undefined?undefined:JSON.stringify(body),{'Content-Type':'application/json; charset=UTF-8',Authorization:'Bearer '+access,'x-rewards-appid':'SAAndroid/31.4.2110003555','x-rewards-ismobile':'true','x-rewards-country':country,'x-rewards-partnerid':'startapp','x-rewards-flights':'rwgobig'}));
+}
+function mrPrepare(r,state,key){
+  if(state.actions[key])return false;
+  state.actions[key]={status:'待确认',id:mrId(),at:Date.now()};mrSave(r,'state',state);return true;
+}
+async function mrSign(r,s){
+  if(s.actions.sign){s.notes.SIGN=s.actions.sign.status;return;}
+  await mrToken(r); // Do not create a pending action when authorization itself is missing.
+  if(!mrPrepare(r,s,'sign'))return;
+  const j=await mrApp(r,'POST','/dapi/me/activities',{amount:1,attributes:{},id:s.actions.sign.id,type:103,country:r.e.COUNTRY||'cn',risk_context:{},channel:'SAAndroid'});
+  const points=mrNumeric(j.response?.activity?.p);
+  s.actions.sign.status=points===null?'签到待确认':'签到已确认';s.actions.sign.points=points;s.notes.SIGN=s.actions.sign.status;
+}
+async function mrRead(r,s){
+  const j=await mrApp(r,'GET','/dapi/me?channel=SAAndroid&options=613');const p=j.response?.promotions?.find(x=>x.attributes?.offerid==='ENUS_readarticle3_30points');
+  const current=mrNumeric(p?.attributes?.progress),max=mrNumeric(p?.attributes?.max);
+  if(current===null||max===null){s.notes.READ='阅读额度未知，未提交';return;}
+  s.read={current,max};if(current>=max){s.notes.READ='阅读已完成 '+current+'/'+max;return;}
+  const key='read:'+current;if(!mrPrepare(r,s,key)){s.notes.READ='阅读 '+current+'/'+max+'，上次提交待确认';return;}
+  await mrApp(r,'POST','/dapi/me/activities',{amount:1,country:r.e.COUNTRY||'cn',id:s.actions[key].id,type:101,attributes:{offerid:'ENUS_readarticle3_30points'}});
+  s.notes.READ='阅读已提交，等待服务端进度更新';
+  const after=await mrApp(r,'GET','/dapi/me?channel=SAAndroid&options=613');const task=after.response?.promotions?.find(x=>x.attributes?.offerid==='ENUS_readarticle3_30points');const next=mrNumeric(task?.attributes?.progress);
+  if(next!==null){s.read={current:next,max};if(next>current){s.actions[key].status='服务端已确认';s.notes.READ='阅读 '+next+'/'+max;}}
+}
+async function mrPromos(r,s,snap){
+  const tasks=[...snap.earnTasks.map(p=>({...p,kind:'earn'})),...snap.promos.map(p=>({...p,kind:'dash'}))];
+  const item=tasks.find(p=>!p.complete&&p.id&&p.hash&&!s.actions['promo:'+p.id]);
+  if(!item){s.notes.PROMOS=tasks.some(p=>!p.complete)?'活动提交待确认':'没有可执行活动';return;}
+  let csrf=null,action=null;
+  if(item.kind==='dash'){
+    const html=await mrRequest(r,'GET',MR_WEB+'/','web');csrf=html.match(/RequestVerificationToken[^>]*value="([^"]+)"/)?.[1]||html.match(/"verificationToken"\s*:\s*"([^"]+)"/)?.[1];
+    if(!csrf)throw mrFault('网页活动缺少验证令牌，未提交');
+  }else{action=String(r.e.EARN_ACTION_ID||'70babbc81d2724f60d29a95c03b3d739cba77cea92');if(!/^(?:[a-f0-9]{40}|[a-f0-9]{42})$/i.test(action))throw mrFault('网页 EARN_ACTION_ID 格式错误');}
+  const key='promo:'+item.id;if(!mrPrepare(r,s,key))return;
+  if(item.kind==='earn'){
+    await mrRequest(r,'POST',MR_WEB+'/earn','web',JSON.stringify([item.hash,11,{offerid:item.id,isPromotional:'$undefined',timezoneOffset:String(r.e.TIMEZONE_OFFSET||'-480')}]),{'Content-Type':'text/plain;charset=UTF-8','next-action':action,Referer:MR_WEB+'/earn'});
+  }else{
+    await mrRequest(r,'POST',MR_WEB+'/api/reportactivity?X-Requested-With=XMLHttpRequest','web',mrForm({id:item.id,hash:item.hash,activityAmount:1,__RequestVerificationToken:csrf}),{'Content-Type':'application/x-www-form-urlencoded',Referer:MR_WEB+'/'});
+    // Retain the original browser-reporting channel; no local points are awarded.
+    if(r.e.BING_COOKIE)await mrRequest(r,'POST',MR_BING+'/msrewards/api/v1/ReportActivity?ajaxreq=1','bing',JSON.stringify({ActivitySubType:'quiz',ActivityType:'notification',OfferId:item.id,Channel:'Bing.Com',PartnerId:'BingTrivia',Timezone:Number(r.e.TIMEZONE_OFFSET||-480)}),{'Content-Type':'application/json'});
+  }
+  s.notes.PROMOS='活动已提交，等待服务端确认';
+}
+async function mrSearch(r,s,snap){
+  const quota=k=>snap[k]?.current!==null&&snap[k]?.max!==null&&snap[k]?.current<snap[k]?.max;
+  const total=(snap.pc.current||0)+(snap.mobile.current||0);
+  if(s.lastSearch!==undefined){if(total<=s.lastSearch)s.searchMisses++;else s.searchMisses=0;s.lastSearch=undefined;}
+  if(s.searchMisses>=2){s.notes.SEARCH='搜索进度连续未增长，今日停止';return;}
+  if(!quota('pc')&&!quota('mobile')){s.notes.SEARCH=snap.pc.max===null||snap.mobile.max===null?'搜索额度未知，未提交':'搜索额度已完成';return;}
+  const mobile=quota('mobile')&&(!quota('pc')||s.searchIndex%2===1),counter=mobile?snap.mobile:snap.pc;
+  const key='search:'+s.searchIndex;if(!mrPrepare(r,s,key))return;
+  const custom=String(r.e.SEARCH_TERMS||'').split('|').map(x=>x.trim()).filter(Boolean);
+  const words=custom.length?custom:['今日科技新闻','天文观测','城市天气','自然摄影','开源软件','历史博物馆','世界地理','森林生态','咖啡制作','阅读推荐','太空探索','旅行路线'];
+  const term=words[s.searchIndex%words.length]+' '+s.day+' '+(s.searchIndex+1),query=MR_BING+'/search?'+mrForm({q:term,form:'QBLH',...(mrEnabled(r.e,'LOCK_CN')?{mkt:'zh-CN'}:{})});
+  const ua=mobile?MR_MOBILE:MR_PC;
+  const cookie=String(r.e.BING_COOKIE||'').split(';').map(x=>x.trim()).filter(x=>x&&!/^(_EDGE_S|_RwBf|_Rwho)=/.test(x)).join('; ')+'; _Rwho=u='+(mobile?'m':'d')+'&ts='+s.day;
+  const searchHeaders={'User-Agent':ua,Cookie:cookie};
+  const html=await mrRequest(r,'GET',query,'bing',undefined,{...searchHeaders,Referer:MR_BING+'/'});
+  const ig=html.match(/\bIG\s*:\s*"([A-Fa-f0-9]+)"/)?.[1];
+  if(ig){
+    const base='?IG='+encodeURIComponent(ig)+'&IID=SERP.5047&ajaxreq=1';
+    await mrRequest(r,'POST',MR_BING+'/rewardsapp/ncheader'+base,'bing','wb=1%3bi%3d1%3bv%3d1',{...searchHeaders,Referer:query,'Content-Type':'application/x-www-form-urlencoded'});
+    await mrRequest(r,'POST',MR_BING+'/rewardsapp/reportActivity'+base,'bing',mrForm({url:query,V:'web'}),{...searchHeaders,Referer:query,'Content-Type':'application/x-www-form-urlencoded'});
+    const click=html.match(/class="b_algo[\s\S]*?href="([^"]+)"\s+h="ID=([^";]+)[^"]*"/);
+    if(click)await mrRequest(r,'GET',MR_BING+'/fd/ls/GLinkPingPost.aspx?'+mrForm({IG:ig,ID:click[2],url:click[1]}),'bing',undefined,{...searchHeaders,Referer:query});
+  }
+  s.searchIndex++;s.lastSearch=total;s.notes.SEARCH=(mobile?'手机':'电脑')+'搜索已提交 '+counter.current+'/'+counter.max+'，以查询结果为准';
+}
+function mrNumber(v){return v===null||v===undefined?'—':Number(v).toLocaleString('en-US');}
+function mrTxt(text,size=12,color='#F5F7FC',extra={}){return {type:'text',text:String(text),font:{size,weight:'medium'},textColor:color,maxLines:1,minScale:0.65,...extra};}
+function mrRow(children,extra={}){return {type:'stack',direction:'row',alignItems:'center',gap:7,children,...extra};}
+function mrCol(children,extra={}){return {type:'stack',direction:'column',alignItems:'start',gap:4,children,...extra};}
+function mrBar(name,c,color,width=130){const ratio=c.max>0&&c.current!==null?Math.min(1,Math.max(0,c.current/c.max)):0;return mrCol([mrRow([mrTxt(name,10,'#ADBBD0'),{type:'spacer'},mrTxt(mrNumber(c.current)+' / '+mrNumber(c.max),11)]),mrRow([...(ratio>0?[{type:'stack',height:5,flex:ratio,backgroundColor:color,borderRadius:3,children:[]}]:[]),...(ratio<1?[{type:'stack',height:5,flex:1-ratio,backgroundColor:'#FFFFFF16',borderRadius:3,children:[]}]:[])],{gap:0,width})]);}
+function mrWidget(ctx,snap,state,status){
+  const family=ctx.widgetFamily||'systemMedium',small=family==='systemSmall',large=family==='systemLarge'||family==='systemExtraLarge';
+  const notes=state.notes||{},error=(()=>{try{return JSON.parse(ctx.storage.get('msrewards:v1:'+(ctx.env?.ACCOUNT_ID||'default')+':lastError')||'null');}catch{return null;}})();
+  if(family.startsWith('accessory'))return {type:'widget',url:MR_WEB+'/',children:[{type:'text',text:family==='accessoryInline'?'Rewards '+mrNumber(snap.balance)+' · '+status:mrNumber(snap.balance),font:{size:family==='accessoryCircular'?16:20,weight:'bold'},minScale:0.5,maxLines:1},...(family==='accessoryInline'?[]:[{type:'text',text:status,font:{size:9},maxLines:1}])]};
+  const oldDay=snap.day!==mrDay(ctx.env?.TIMEZONE||'Asia/Shanghai');
+  const balance=mrCol([mrTxt('可用积分',10,'#ADBBD0'),mrTxt(mrNumber(snap.balance),small?30:36,'#FFFFFF',{font:{size:small?30:36,weight:'bold'}}),mrTxt((oldDay?'上次记录':'今日')+' +'+mrNumber(snap.today),10,'#8AE0BB')],{flex:1});
+  const progress=mrCol([mrBar('电脑搜索',snap.pc,'#72B7FF',large?280:130),mrBar('手机搜索',snap.mobile,'#8AE0BB',large?280:130)],{flex:1,gap:10});
+  const children=[mrRow([mrTxt(small?'REWARDS':'MICROSOFT / REWARDS',9,'#8FC5FF'),{type:'spacer'},mrTxt(oldDay?'跨日缓存':status,8,'#ADBBD0')]),{type:'spacer'}];
+  if(small)children.push(balance,mrTxt('电脑 '+mrNumber(snap.pc.current)+' / '+mrNumber(snap.pc.max),10,'#ADBBD0'),mrTxt('手机 '+mrNumber(snap.mobile.current)+' / '+mrNumber(snap.mobile.max),10,'#ADBBD0'));
+  else if(large)children.push(balance,progress);
+  else children.push(mrRow([balance,progress],{gap:18}));
+  children.push({type:'spacer'});
+  if(large){children.push(mrRow([mrTxt('任务状态',12,'#8AE0BB'),{type:'spacer'},mrTxt(snap.level,10,'#ADBBD0')]));for(const [key,label] of [['SIGN','签入'],['READ','阅读'],['PROMOS','活动'],['SEARCH','搜索']])children.push(mrRow([mrTxt(label,11,'#ADBBD0'),mrTxt(notes[key]||'尚未执行',11,'#F5F7FC',{flex:1,maxLines:1})]));if(error&&error.at>(state.lastRun||0))children.push(mrTxt(error.message,10,'#FFC78A',{maxLines:2}));}
+  children.push(mrRow([mrTxt('查询',8,'#ADBBD0'),{type:'date',date:new Date(snap.at).toISOString(),format:'relative',font:{size:8},textColor:'#ADBBD0'},{type:'spacer'},mrTxt('点按打开 Rewards',8,'#ADBBD0')]));
+  return {type:'widget',url:MR_WEB+'/',padding:small?12:14,gap:small?5:7,backgroundGradient:{type:'linear',colors:['#101F39','#1A3353'],startPoint:{x:0,y:0},endPoint:{x:1,y:1}},refreshAfter:new Date(Date.now()+1800000).toISOString(),children};
+}
+function mrError(ctx,message){return {type:'widget',url:MR_WEB+'/',padding:ctx.widgetFamily?.startsWith('accessory')?0:14,gap:8,children:[mrTxt('Microsoft Rewards',14,'#74AFFF'),mrTxt(message,11,undefined,{maxLines:4})],refreshAfter:new Date(Date.now()+1800000).toISOString()};}
 
-/* ==UserConfig==
-Config:
-    keep:
-        title: 持续检测（关闭则所有任务完成后不再检测）
-        type: checkbox
-        default: true
-    lock:
-        title: 锁定国区（若当前 IP 非中国大陆地区则停止）
-        type: checkbox
-        default: true
-    span:
-        title: 搜索间隔（至少 30 秒即间隔 15-45 秒）
-        type: number
-        default: 30
-        min: 30
-        unit: ±15秒
-    api:
-        title: 搜索词接口（offline为随机搜索词）
-        type: select
-        default: hot.nntool.cc
-        values: [offline, hot.nntool.cc, hot.baiwumm.com, hot.cnxiaobai.com]
-    code:
-        title: 授权码链接（请勿分享以免个人数据泄露）
-        type: textarea
-        description: https://login.live.com/oauth20_desktop.srf?code=M.C540_BAY.2.U.********-****-****-****-************&...
-Tasks:
-    sign:
-        title: 签入（Authorization Code）
-        type: checkbox
-        default: true
-    read:
-        title: 阅读（Authorization Code）
-        type: checkbox
-        default: true
-    promos:
-        title: 活动（rewards.bing.com）
-        type: checkbox
-        default: true
-    search:
-        title: 搜索（www.bing.com）
-        type: checkbox
-        default: true
-Notice:
-    bro:
-        title: 浏览器通知（当前脚本）
-        type: checkbox
-        default: true
-    wework:
-        title: 企业微信消息推送（群机器人）
-        type: text
-        password: true
-        description: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-    dingding:
-        title: 钉钉群机器人（不加签，关键词：#）
-        type: text
-        password: true
-        description: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-    feishu:
-        title: 飞书群机器人（不加签，关键词：#）
-        type: text
-        password: true
-        description: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-    pushme:
-        title: PushMe（push.i-i.me）
-        type: text
-        password: true
-        description: xxxxxxxxxxxxxxxxxxxx
-    bark:
-        title: Bark（bark.day.app）
-        type: text
-        password: true
-        description: xxxxxxxxxxxxxxxxxxxx
-==/UserConfig== */
-
-
-const FuckD = {
-    wh: [
-        {
-            name: "企业微信",
-            url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=",
-            key: GM_getValue("Notice.wework", false),
-            msg: {
-                "msgtype": "markdown_v2",
-                "markdown_v2": {
-                    get content() {
-                        return `> ${FuckD.bing.datetimeLocaleStr}\n\n ## ${GM_info.script.name}\n ${FuckD.bing.sendMSG}`
-                    }
-                },
-            },
-            docs: "https://developer.work.weixin.qq.com/document/path/91770"
-        },
-        {
-            name: "钉钉",
-            url: "https://oapi.dingtalk.com/robot/send?access_token=",
-            key: GM_getValue("Notice.dingding", false),
-            msg: {
-                "msgtype": "markdown",
-                "markdown": {
-                    "title": GM_info.script.name,
-                    get text() {
-                        return `> ${FuckD.bing.datetimeLocaleStr}\n ### ${GM_info.script.name}\n ${FuckD.bing.sendMSG}`
-                    }
-                },
-            },
-            docs: "https://open.dingtalk.com/document/orgapp/custom-robots-send-group-messages"
-        },
-        {
-            name: "飞书",
-            url: "https://open.feishu.cn/open-apis/bot/v2/hook/",
-            key: GM_getValue("Notice.feishu", false),
-            msg: {
-                "msg_type": "interactive",
-                "card": {
-                    "schema": "2.0",
-                    "header": {
-                        "title": {
-                            "tag": "plain_text",
-                            "content": GM_info.script.name
-                        },
-                        "template": "orange"
-                    },
-                    "body": {
-                        "elements": [{
-                            "tag": "markdown",
-                            "text_align": "center",
-                            get content() {
-                                return `#### ${FuckD.bing.datetimeLocaleStr}\n ${FuckD.bing.sendMSG}`
-                            }
-                        }]
-                    }
-                }
-            },
-            docs: "https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot"
-        },
-        {
-            name: "PushMe",
-            url: "https://push.i-i.me/?push_key=",
-            key: GM_getValue("Notice.pushme", false),
-            msg: {
-                "type": "markdown",
-                "title": `${GM_info.script.name}[#reawrds!https://rewards.bing.com/rewards.png]`,
-                get content() {
-                    return `\n ${FuckD.bing.sendMSG}`
-                }
-            },
-            docs: "https://push.i-i.me/docs/index"
-        },
-        {
-            name: "Bark",
-            url: "https://api.day.app/",
-            key: GM_getValue("Notice.bark", false),
-            msg: {
-                "group": "rewards",
-                "icon": "https://rewards.bing.com/rewards.png",
-                "title": GM_info.script.name,
-                get markdown() {
-                    return `\n ${FuckD.bing.sendMSG}`
-                }
-            },
-            docs: "https://bark.day.app/#/tutorial"
-        },
-    ],
-    ua: {
-        pc: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.2420.81",
-        m: "Mozilla/5.0 (Linux; Android 16; MCE16 Build/BP3A.250905.014; ) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/123.0.0.0 Mobile Safari/537.36 EdgA/123.0.2420.102",
-    },
-    cookie: {
-        bing: "",
-    },
-    api: {
-        mode: GM_getValue("Config.api", "offline"),
-        arr: [
-            ["hot.baiwumm.com", {
-                url: "https://hot.baiwumm.com/api/",
-                hot: ["weibo", "douyin", "baidu", "toutiao", "thepaper", "qq", "netease", "zhihu"],
-            }],
-            ["hot.cnxiaobai.com", {
-                url: "https://cnxiaobai.com/DailyHotApi/",
-                hot: ["weibo", "douyin", "baidu", "toutiao", "thepaper", "qq-news", "netease-news", "zhihu"],
-            }],
-            ["hot.nntool.cc", {
-                url: "https://hotapi.nntool.cc/",
-                hot: ["weibo", "douyin", "baidu", "toutiao", "thepaper", "qq-news", "netease-news", "zhihu"],
-            }],
-        ],
-    },
-    tasks: {
-        sign: GM_getValue("Tasks.sign", true),
-        read: GM_getValue("Tasks.read", true),
-        promos: GM_getValue("Tasks.promos", true),
-        search: GM_getValue("Tasks.search", true),
-    },
-    bing: {
-        region: "CN",
-        status: GM_getValue("Config.lock", true),
-        repo: "https://github.com/geoisam/FuckScripts/",
-        time: 3210,
-        span: GM_getValue("Config.span", 30),
-        code: 0,
-        token: false,
-        error: 0,
-        tasks: {
-            get sign() {
-                return FuckD.sign.date
-            },
-            get read() {
-                return FuckD.read.date
-            },
-            get promos() {
-                return FuckD.promos.date
-            },
-            get search() {
-                return FuckD.search.date
-            },
-        },
-        mainland: 1,
-        end: 1,
-    },
-    sign: {
-        times: 0,
-        point: -1,
-        end: 0,
-    },
-    read: {
-        times: 0,
-        point: 0,
-        end: 0,
-    },
-    promos: {
-        times: 0,
-        token: 0,
-        end: 0,
-    },
-    search: {
-        device: "",
-        word: {
-            list: [],
-            index: 0,
-        },
-        times: 0,
-        progressNow: 0,
-        pc: {
-            progress: 0,
-            max: 1,
-        },
-        m: {
-            progress: 0,
-            max: 1,
-        },
-        index: 0,
-        end: 0,
-    },
-}
-
-const FuckF = {
-    getRandomNum(num) {
-        return Math.floor(Math.random() * num)
-    },
-    getScopeRandomNum(min, max) {
-        return Math.floor(Math.random() * (max + 1 - min) + min)
-    },
-    getRandomArr(arr) {
-        return arr.sort(() => {
-            return Math.random() - 0.5
-        })
-    },
-    getRandomUUID(only = false) {
-        const uuid = crypto.randomUUID()
-        const sid = uuid.replace(/-/g, "").toUpperCase()
-        return only ? sid : uuid
-    },
-    getTimestamp(start = 0, end = 13) {
-        const timestamp = Date.now()
-        const num = timestamp.toString().substring(start, end)
-        return Number(num)
-    },
-    getDatetime(num = false, slash = true) {
-        const today = new Date()
-        const year = today.getFullYear()
-        let month = today.getMonth() + 1
-        let day = today.getDate()
-        month = month < 10 ? "0" + month : month
-        day = day < 10 ? "0" + day : day
-        const dateNow = num ? Number(`${year}${month}${day}`) : slash ? `${month}/${day}/${year}` : `${year}-${month}-${day}`
-        return dateNow
-    },
-    isJSON(s) {
-        try {
-            const j = JSON.parse(s)
-            const p = Array.isArray(j) || (typeof j === "object" && j !== null)
-            return p ? true : false
-        } catch (e) {
-            return false
-        }
-    },
-    log(title, text, push = false) {
-        GM_log(title + text + "🔚")
-        if (!GM_getValue("Notice.bro", true) || !push) return
-        GM_notification({
-            text: text,
-            title: GM_info.script.name + title,
-            onclick: () => {
-                GM_openInTab(FuckD.bing.repo, { active: true, insert: true, setParent: true })
-            },
-        })
-    },
-    xhr(options, only = false) {
-        return new Promise((resolve, reject) => {
-            const start = FuckF.getTimestamp(); 
-            try {
-                GM_xmlhttpRequest({
-                    ...options,
-                    timeout: 15000,
-                    ontimeout: () => {
-                        const cost = (FuckF.getTimestamp() - start) / 1000;
-                        reject(new Error(`请求超时！用时 ${cost} 秒`));
-                    },
-                    onload: (xhr) => {
-                        const cost = (FuckF.getTimestamp() - start) / 1000;
-                        if (xhr.status >= 200 && xhr.status < 300) { 
-                            resolve(only ? xhr.finalUrl : xhr.responseText);
-                            return;
-                        }
-                        const redirectStatuses = [301, 302, 307, 308];
-                        if (redirectStatuses.includes(xhr.status)) {
-                            const match = xhr.responseHeaders?.match(/Location:\s*(.*?)\s*\r?\n/i);
-                            resolve(match ? match[1] : false);
-                            return;
-                        }
-                        reject(new Error(`请求失败，用时 ${cost} 秒，状态码：${xhr.status}`));
-                    },
-                    onerror: (err) => {
-                        const cost = (FuckF.getTimestamp() - start) / 1000;
-                        reject(new Error(`请求异常！用时 ${cost} 秒 🔛${err}`));
-                    },
-                });
-            } catch (e) {
-                reject(e);
-            }
-        });
-    },
-}
-
-FuckF.getRandomSubstring = (str, min = 20, max = 32) => {
-    const length = str.length
-    if (length <= min) {
-        return str
-    }
-    const randomLength = FuckF.getScopeRandomNum(min, max)
-    return str.substring(0, randomLength)
-}
-
-FuckF.getRandomApiHot = () => {
-    const lastIndex = parseInt(GM_getValue("Config.index", -1))
-    const filteredArr = FuckD.api.hot.filter((name, index) => index != lastIndex)
-    const randomIndex = FuckF.getRandomNum(filteredArr.length)
-    GM_setValue("Config.index", randomIndex)
-    return filteredArr[randomIndex]
-}
-
-FuckF.getToken = async (url) => {
-    try {
-        const result = await FuckF.xhr({ url: url })
-        if (result && FuckF.isJSON(result)) {
-            const res = JSON.parse(result)
-            const refresh = res.refresh_token
-            const access = res.access_token
-            if (refresh && access) {
-                GM_setValue("Config.token", refresh)
-                FuckD.bing.token = access
-                return true
-            }
-        }
-    } catch (e) {
-        if (e.message.includes("400") || e.message.includes("401")) {
-            return false; 
-        }
-        FuckF.log("🔴", `Token 请求失败！🔛${e.message}`)
-    }
-    return false
-}
-
-FuckF.renewToken = async () => {
-    let refreshToken = GM_getValue("Config.token", false);
-    if (!refreshToken) {
-        let code = GM_getValue("Config.code", "geoisam");
-        code = code ? code.match(/M\.[^&]+/) : null;   
-        if (!code) {
-            FuckF.log("🟡", "未填写授权码！将跳过签入和阅读任务。");
-            FuckD.tasks.sign = false;
-            FuckD.tasks.read = false;
-            return false;
-        } 
-        FuckF.log("🟢", "授权码读取成功！");
-        const url = `https://login.live.com/oauth20_token.srf?client_id=0000000040170455&code=${code[0]}&redirect_uri=https://login.live.com/oauth20_desktop.srf&grant_type=authorization_code`;
-        const token = await FuckF.getToken(url);
-        if (!token) {
-            GM_setValue("Config.code", ""); 
-            FuckF.log("🟡", "授权码无效或已过期！请在设置中重新填写。");
-            FuckD.tasks.sign = false;
-            FuckD.tasks.read = false;
-            return false;
-        }
-        return true;
-    } else {
-        const url = `https://login.live.com/oauth20_token.srf?client_id=0000000040170455&refresh_token=${refreshToken}&scope=service::prod.rewardsplatform.microsoft.com::MBI_SSL&grant_type=REFRESH_TOKEN`;
-        const token = await FuckF.getToken(url);
-        if (!token) {
-            GM_setValue("Config.token", false);
-            GM_setValue("Config.code", ""); 
-            FuckF.log("🟡", "Token 已失效！请重新获取并填写新的授权码链接。");
-            FuckD.tasks.sign = false;
-            FuckD.tasks.read = false;
-            return false;
-        }
-        return true;
-    }
-}
-
-FuckF.getRewardsInfo = async () => {
-try {
-    const earnHtml = await FuckF.xhr({ url: "https://rewards.bing.com/earn" });
-    const cleanHtml = earnHtml.replace(/\\"/g, '"');
-    const balMatch = cleanHtml.match(/"balance":(\d+)/) || cleanHtml.match(/"availablePoints":(\d+)/);
-    const keyword = '"pointsCounters":{';
-    const idx = cleanHtml.indexOf(keyword);
-    if (!balMatch || idx === -1) {
-        return false;
-    }
-    let balance = parseInt(balMatch[1]);
-    let pcMax = 60, pcCur = 0;
-    let mobMax = 0, mobCur = 0;
-    let dailyPoint = 0;
-    let todayTotal = 0; 
-    let start = idx + 17; 
-    let openBraces = 0;
-    let end = start;
-    for (let i = start; i < cleanHtml.length; i++) {
-        if (cleanHtml[i] === '{') openBraces++;
-        if (cleanHtml[i] === '}') {
-            openBraces--;
-            if (openBraces === 0) {
-                end = i + 1;
-                break;
-            }
-        }
-    }
-    try {
-        const pts = JSON.parse(cleanHtml.substring(start, end));
-        pcMax = pts.pc?.max ?? 60;
-        pcCur = pts.pc?.progress ?? 0;
-        mobMax = pts.mobile?.max ?? 0;
-        mobCur = pts.mobile?.progress ?? 0;
-        dailyPoint = pts.dailyOffer ?? 0;
-        todayTotal = pts.totalPoints ?? 0; 
-        FuckD.bing.todayTotalPoints = todayTotal;  
-    } catch (e) {
-        FuckF.log("🟡", "仪表盘解析异常！将使用保底数值。");
-    }
-    return {
-        userStatus: {
-            availablePoints: balance,
-            counters: {
-                pcSearch: [{ pointProgress: pcCur, pointProgressMax: pcMax }],
-                mobileSearch: [{ pointProgress: mobCur, pointProgressMax: mobMax }],
-                dailyPoint: [{ pointProgress: dailyPoint }]
-            }
-        }
-    };
-} catch (e) {
-    FuckF.log("🔴", `仪表盘请求失败！🔛 ${e.message}`);
-}
-return false;
-}
-
-FuckF.taskSign = async () => {
-    if (!FuckD.tasks.sign || FuckD.sign.date == FuckD.bing.dateNowNum || FuckD.sign.times > 2 || FuckD.sign.end > 0) {
-        FuckD.sign.end++
-        return true
-    }
-    if (FuckD.sign.point >= 0) {
-        FuckD.sign.end++
-        if (FuckD.sign.date != FuckD.bing.dateNowNum) {
-            FuckD.sign.date = FuckD.bing.dateNowNum
-            FuckD.bing.sendMSG = `签入任务已完成！\n${FuckD.sign.point > 0 ? `✨今日签入奖励：${FuckD.sign.point}` : "🚨今日已签入，无法二次签入"}`
-            FuckF.log("🟣", FuckD.bing.sendMSG, true)
-            FuckF.send(FuckD.wh)
-        }
-        GM_setValue("Config.tasks", FuckD.bing.tasks)
-        return true
-    }
-    try {
-        const fucker = await FuckF.mainlandCheck()
-        if (FuckD.bing.status && fucker) {
-            FuckD.bing.code = -1
-            return true
-        }
-        const region = FuckD.bing.status ? "cn" : FuckD.bing.region.toLowerCase()
-        const result = await FuckF.xhr({
-            method: "POST",
-            url: "https://prod.rewardsplatform.microsoft.com/dapi/me/activities",
-            headers: {
-                "content-type": "application/json; charset=UTF-8",
-                "user-agent": FuckD.ua.m,
-                "authorization": `Bearer ${FuckD.bing.token}`,
-                "x-rewards-appid": "SAAndroid/31.4.2110003555",
-                "x-rewards-ismobile": "true",
-                "x-rewards-country": region,
-                "x-rewards-partnerid": "startapp",
-                "x-rewards-flights": "rwgobig",
-            },
-            data: JSON.stringify({
-                "amount": 1,
-                "attributes": {},
-                "id": FuckF.getRandomUUID(),
-                "type": 103,
-                "country": region,
-                "risk_context": {},
-                "channel": "SAAndroid",
-            }),
-        })
-        if (result && FuckF.isJSON(result)) {
-            FuckD.sign.times = 0
-            const res = JSON.parse(result)
-            const point = res.response.activity.p
-            FuckD.sign.point = point ? point : 0
-            if (FuckD.sign.point > 0) {
-                GM_setValue("Config.signPoint", FuckD.sign.point);
-                GM_setValue("Config.signDate", FuckD.bing.dateNowNum);
-            }    
-        } else {
-            FuckD.sign.times++
-        }
-    } catch (e) {
-        FuckF.log("🔴", `签入任务出错！🔛${e.message}`)
-    }
-    return false
-}
-
-FuckF.getReadPro = async () => {
-    try {
-        const result = await FuckF.xhr({
-            url: "https://prod.rewardsplatform.microsoft.com/dapi/me?channel=SAAndroid&options=613",
-            headers: {
-                "content-type": "application/json; charset=UTF-8",
-                "user-agent": FuckD.ua.m,
-                "authorization": `Bearer ${FuckD.bing.token}`,
-                "x-rewards-appid": "SAAndroid/31.4.2110003555",
-                "x-rewards-ismobile": "true",
-            },
-        });
-        if (result && FuckF.isJSON(result)) {
-            const res = JSON.parse(result);
-            const promos = res.response?.promotions || [];
-            const readTask = promos.find(x => x.attributes?.offerid === 'ENUS_readarticle3_30points');
-            if (readTask) {
-                const progress = parseInt(readTask.attributes.progress) || 0;
-                const max = parseInt(readTask.attributes.max) || 30;
-                return { progress, max }; 
-            }
-        }
-    } catch (e) {
-        FuckF.log("🔴", `阅读进度获取出错！🔛${e.message}`);
-    }
-    return false;
-}
-
-FuckF.taskRead = async () => {
-    if (!FuckD.tasks.read || FuckD.read.times > 2 || FuckD.read.end > 0 || FuckD.read.date == FuckD.bing.dateNowNum) {
-        FuckD.read.end++;
-        return true;
-    }
-    try {
-        const readPro = await FuckF.getReadPro();
-        if (!readPro) return false; 
-        let cur = readPro.progress || 0;
-        let max = readPro.max || 30;
-        FuckF.log("📖", `阅读进度获取成功：${cur}/${max}`);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        if (cur >= max) {
-            FuckF.log("📖", "接口返回进度已满，但本地无今日记录，强制开始阅读...");
-            cur = 0;
-            max = 30; 
-        }
-        const fucker = await FuckF.mainlandCheck();
-        if (FuckD.bing.status && fucker) {
-            FuckD.bing.code = -1;
-            return true;
-        }
-        const region = FuckD.bing.status ? "cn" : FuckD.bing.region.toLowerCase();
-        FuckD.read.date = 0;
-        const readsNeeded = Math.ceil((max - cur) / 3);
-        for (let i = 0; i < readsNeeded; i++) {
-            await FuckF.xhr({
-                method: "POST",
-                url: "https://prod.rewardsplatform.microsoft.com/dapi/me/activities",
-                headers: {
-                    "content-type": "application/json; charset=UTF-8",
-                    "user-agent": FuckD.ua.m,
-                    "authorization": `Bearer ${FuckD.bing.token}`,
-                    "x-rewards-appid": "SAAndroid/31.4.2110003555",
-                    "x-rewards-ismobile": "true",
-                    "x-rewards-country": region,
-                },
-                data: JSON.stringify({
-                    "amount": 1,
-                    "country": region,
-                    "id": FuckF.getRandomUUID(),
-                    "type": 101,
-                    "attributes": {
-                        "offerid": "ENUS_readarticle3_30points",
-                    },
-                }),
-            });
-            FuckF.log("📖", `正在阅读第 ${i + 1}/${readsNeeded} 篇文章...`);
-            const waitTime = FuckF.getScopeRandomNum(3000, 7000);
-            await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
-        FuckD.read.end++;
-        if (FuckD.read.date != FuckD.bing.dateNowNum) {
-            FuckD.read.date = FuckD.bing.dateNowNum;
-            GM_setValue("Config.tasks", FuckD.bing.tasks);
-            FuckD.bing.sendMSG = `阅读任务已完成！\n✨今日阅读奖励：${max}/${max}`;
-            FuckF.log("🟣", FuckD.bing.sendMSG, true);
-            FuckF.send(FuckD.wh);
-        }
-        return true;
-    } catch (e) {
-        FuckF.log("🔴", `阅读任务出错！🔛${e.message}`);
-        FuckD.read.times++;
-        return false;
-    }
-}
-
-FuckF.taskPromos = async () => {
-    if (!FuckD.tasks.promos || FuckD.promos.times > 2 || FuckD.promos.end > 0 || (!GM_getValue("Config.keep", true) && FuckD.promos.date == FuckD.bing.dateNowNum)) {
-        FuckD.promos.end++;
-        return true;
-    }
-    let promosArr = [];
-    let promoPoints = 0;
-    let promoMax = 0;
-    try {
-        const earnHtml = await FuckF.xhr({ url: "https://rewards.bing.com/earn" });
-        const cleanHtml = earnHtml.replace(/\\"/g, '"');
-        if (cleanHtml.includes('"activityCards":[')) {
-            const taskRegex = /"isCompleted":(true|false).*?"points":(\d+).*?"offerId":"([^"]+)","hash":"([^"]+)"/g;
-            let match;
-            while ((match = taskRegex.exec(cleanHtml)) !== null) {
-                const isCompleted = match[1] === "true";
-                const points = parseInt(match[2]);
-                if (points === 0) continue;
-                promoMax += points;
-                if (isCompleted) {
-                    promoPoints += points;
-                } else {
-                    promosArr.push({ id: match[3], hash: match[4], url: "https://rewards.bing.com/earn" });
-                }
-            }
-        } else {
-            FuckD.promos.times++;
-            return false;
-        }
-    } catch (e) {
-        FuckF.log("🔴", `活动解析出错！🔛${e.message}`);
-        FuckD.promos.times++;
-        return false;
-    }
-    if (promosArr.length < 1) {
-        FuckD.promos.end++;
-        if (FuckD.promos.date != FuckD.bing.dateNowNum) {
-            FuckD.promos.date = FuckD.bing.dateNowNum;
-            GM_setValue("Config.tasks", FuckD.bing.tasks);
-            FuckD.bing.sendMSG = `活动任务已完成！\n✨今日活动奖励：${promoPoints}/${promoMax}`;
-            FuckF.log("🟣", FuckD.bing.sendMSG, true);
-            FuckF.send(FuckD.wh);
-        }
-        return true;
-    }
-    try {
-        const fucker = await FuckF.mainlandCheck();
-        if (FuckD.bing.status && fucker) {
-            FuckD.bing.code = -1;
-            return true;
-        }
-        FuckD.promos.date = 0;
-        for (const item of promosArr) {
-            await FuckF.xhr({
-                method: "POST",
-                url: "https://rewards.bing.com/earn",
-                headers: {
-                    "content-type": "text/plain;charset=UTF-8",
-                    "next-action": "70babbc81d2724f60d29a95c03b3d739cba77cea92",
-                    "referer": item.url,
-                },
-                data: JSON.stringify([
-                    item.hash,
-                    11,
-                    { "offerid": item.id, "isPromotional": "$undefined", "timezoneOffset": "-480" }
-                ]),
-            });
-            await FuckF.xhr({
-                method: "POST",
-                url: `https://${FuckD.bing.host}/msrewards/api/v1/ReportActivity?ajaxreq=1`,
-                headers: { "content-type": "application/json; charset=UTF-8", "referer": item.url },
-                data: JSON.stringify({
-                    "ActivitySubType": "quiz",
-                    "ActivityType": "notification",
-                    "OfferId": item.id,
-                    "Channel": "Bing.Com",
-                    "PartnerId": "BingTrivia",
-                    "Timezone": -480
-                }),
-            });
-            await new Promise(resolve => setTimeout(resolve, FuckF.getScopeRandomNum(1500, 3000)));
-        }
-        FuckD.promos.end++;
-        return true;
-    } catch (e) {
-        FuckF.log("🔴", `活动交卷出错！🔛${e.message}`);
-    }
-    FuckD.promos.times++;
-    return false;
-}
-
-FuckF.getQueryWord = async () => {
-    const keywords = ["天气预报", "今日新闻", "体育赛事", "股票行情", "电影推荐", "科技资讯", "美食食谱", "旅游攻略", "历史上的今天", "健康常识"];
-    const baseWord = keywords[FuckF.getRandomNum(keywords.length)];
-    const randomSuffix = Math.random().toString(36).slice(2, 6);
-    let sentence = `${baseWord} ${randomSuffix}`;
-    if (FuckD.api.mode != "offline") {
-        if (FuckD.search.word.index < 1 || FuckD.search.word.list.length < 1) {
-            const apiHot = FuckF.getRandomApiHot()
-            try {
-                const result = await FuckF.xhr({ url: FuckD.api.url + apiHot })
-                if (result && FuckF.isJSON(result)) {
-                    const res = JSON.parse(result)
-                    if (res.code == 200) {
-                        FuckD.search.word.index = 1
-                        for (let i = 0; i < res.data.length; i++) {
-                            FuckD.search.word.list.push(res.data[i].title)
-                        }
-                        FuckD.search.word.list = FuckF.getRandomArr(FuckD.search.word.list)
-                        sentence = FuckD.search.word.list[FuckD.search.word.index]
-                        sentence = FuckF.getRandomSubstring(sentence)
-                        return sentence
-                    }
-                }
-            } catch (e) {
-                FuckF.log("🔴", `搜索词获取出错！🔛${e.message}`)
-            }
-        } else {
-            FuckD.search.word.index++
-            if (FuckD.search.word.index > FuckD.search.word.list.length - 1) {
-                FuckD.search.word.index = 0
-            }
-            sentence = FuckD.search.word.list[FuckD.search.word.index]
-            sentence = FuckF.getRandomSubstring(sentence)
-            return sentence
-        }
-        FuckF.log("🟡", "搜索词接口异常！已临时使用随机搜索词。")
-    }
-    return sentence
-}
-
-FuckF.taskSearch = async () => {
-    if (!FuckD.tasks.search || FuckD.search.end > 0 || (!GM_getValue("Config.keep", true) && FuckD.search.date == FuckD.bing.dateNowNum)) {
-        FuckD.search.end++;
-        return true;
-    }
-    if (FuckD.search.index === 0) {
-        const dashboard = await FuckF.getRewardsInfo();
-        if (!dashboard) {
-            return false; 
-        }
-        const searchInfo = dashboard.userStatus?.counters || {};
-        FuckD.search.pc.progress = searchInfo.pcSearch?.[0]?.pointProgress || 0;
-        let pcMax = searchInfo.pcSearch?.[0]?.pointProgressMax || 0;
-        if (pcMax === 0) pcMax = 60;
-        FuckD.search.pc.max = pcMax;
-        FuckD.search.m.progress = searchInfo.mobileSearch?.[0]?.pointProgress || 0;
-        let mMax = searchInfo.mobileSearch?.[0]?.pointProgressMax || 0;
-        if (mMax === 0) mMax = 0;
-        FuckD.search.m.max = mMax;
-        const currentTotalSearch = FuckD.search.pc.progress + FuckD.search.m.progress;
-        const lastTotalSearch = GM_getValue("Config.lastSearchProgress", -1);
-        let restrictedTimes = GM_getValue("Config.restrictedTimes", 0);
-        if (lastTotalSearch !== -1) {
-            if (currentTotalSearch === lastTotalSearch && currentTotalSearch < (pcMax + mMax)) {
-                restrictedTimes++;
-            } else {
-                restrictedTimes = 0; 
-            }
-        }
-        GM_setValue("Config.lastSearchProgress", currentTotalSearch);
-        GM_setValue("Config.restrictedTimes", restrictedTimes);
-        if (restrictedTimes >= 2) {
-            FuckD.search.end++;
-            GM_setValue("Config.lastSearchProgress", -1); 
-            GM_setValue("Config.restrictedTimes", 0);
-            const pcReport = pcMax > 0 ? `\n💻电脑搜索：${FuckD.search.pc.progress}/${pcMax}` : "";
-            const mReport = mMax > 0 ? `\n📱移动设备搜索：${FuckD.search.m.progress}/${mMax}` : "";
-            FuckD.bing.sendMSG = `积分收入受限或账号异常，已中断今日搜索！${pcReport}${mReport}`;
-            FuckF.log("🔴", FuckD.bing.sendMSG, true);
-            FuckF.send(FuckD.wh);
-            return true;
-        }
-    }
-    if (FuckD.search.pc.progress >= FuckD.search.pc.max && FuckD.search.m.progress >= FuckD.search.m.max) {
-        FuckD.search.end++;
-        if (FuckD.search.date != FuckD.bing.dateNowNum) {
-            FuckD.search.date = FuckD.bing.dateNowNum;
-            GM_setValue("Config.tasks", FuckD.bing.tasks);
-            GM_setValue("Config.lastSearchProgress", -1);
-            GM_setValue("Config.restrictedTimes", 0);
-            const pcReport = FuckD.search.pc.max > 0 ? `\n💻电脑搜索：${FuckD.search.pc.progress}/${FuckD.search.pc.max}` : "";
-            const mReport = FuckD.search.m.max > 0 ? `\n📱移动设备搜索：${FuckD.search.m.progress}/${FuckD.search.m.max}` : "";
-            FuckD.bing.sendMSG = `搜索任务已完成！${pcReport}${mReport}`;
-            FuckF.log("🟣", FuckD.bing.sendMSG, true);
-            FuckF.send(FuckD.wh);
-        }
-        return true;
-    }
-    if (FuckD.search.index >= FuckD.search.limit) {
-        FuckD.search.end++;
-        const pcReport = FuckD.search.pc.max > 0 ? `\n💻电脑搜索：${FuckD.search.pc.progress}/${FuckD.search.pc.max}` : "";
-        const mReport = FuckD.search.m.max > 0 ? `\n📱移动设备搜索：${FuckD.search.m.progress}/${FuckD.search.m.max}` : "";
-        FuckD.bing.sendMSG = `本轮运行正常，共搜索 ${FuckD.search.index} 次！${pcReport}${mReport}`;
-        FuckF.log("🔵", FuckD.bing.sendMSG);
-        FuckF.send(FuckD.wh);
-        return true;
-    }
-    FuckD.search.date = 0;
-    let query, params, pcorm, headers, regionMKT = "";
-    if (FuckD.search.pc.progress < FuckD.search.pc.max || FuckD.search.m.progress < FuckD.search.m.max) {
-        pcorm = Math.random() > 0.6 ? false : true;
-        if (FuckD.search.pc.progress >= FuckD.search.pc.max) pcorm = false;
-        if (FuckD.search.m.progress >= FuckD.search.m.max) pcorm = true;
-    }
-    const keyword = await FuckF.getQueryWord();
-    try {
-        const fucker = await FuckF.mainlandCheck();
-        if (FuckD.bing.status && fucker) {
-            FuckD.bing.code = -1;
-            return true;
-        }
-        GM_cookie("delete", { url: "https://bing.com", name: "_EDGE_S" });
-        GM_cookie("delete", { url: "https://bing.com", name: "_Rwho" });
-        GM_cookie("delete", { url: "https://bing.com", name: "_RwBf" });
-        if (FuckD.bing.status) regionMKT = "&mkt=zh-CN";
-        params = `q=${encodeURIComponent(keyword)}&form=QBLH${regionMKT}`;
-        query = `https://${FuckD.bing.host}/search?${params}`;
-        if (pcorm) {
-            FuckD.search.device = "Desktop";
-            headers = {
-                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-                "user-agent": FuckD.ua.pc,
-                "cookie": `_Rwho=u=d&ts=${FuckD.bing.dateNowhyphen}`,
-            };
-        } else {
-            FuckD.search.device = "Mobile";
-            headers = {
-                "content-type": "application/x-www-form-urlencoded; charset=UTF-8",
-                "user-agent": FuckD.ua.m,
-                "cookie": `_Rwho=u=m&ts=${FuckD.bing.dateNowhyphen}`,
-            };
-        }
-        const result = await FuckF.xhr({
-            url: query,
-            headers: {
-                ...headers,
-                "referer": `https://${FuckD.bing.host}/?form=QBLH`,
-            }
-        });
-        if (result) {
-            const res = result.replace(/\s/g, "");
-            const data0 = res.match(/,IG:"([^"]+)"/);
-            const guid = data0 ? data0[1] : FuckF.getRandomUUID(true);
-            const data = res.match(/class="b_algo(.*?)href="(.*?)"h="ID=(.*?)">(.*?)<\/h2/);
-            const ncheader = `https://${FuckD.bing.host}/rewardsapp/ncheader?ver=88888888&IID=SERP.5047&IG=${guid}&ajaxreq=1`;
-            const report = `https://${FuckD.bing.host}/rewardsapp/reportActivity?IG=${guid}&IID=SERP.5047&${params}&ajaxreq=1`;
-            headers = { ...headers, "referer": query };
-            await FuckF.xhr({ method: "POST", url: ncheader, headers: headers, data: "wb=1%3bi%3d1%3bv%3d1" });
-            await FuckF.xhr({ method: "POST", url: report, headers: headers, data: `url=${encodeURIComponent(query)}&V=web` });
-            if (data) {
-                const click = `https://${FuckD.bing.host}/fd/ls/GLinkPingPost.aspx?IG=${guid}&ID=${data[3]}&url=${data[2]}`;
-                await FuckF.xhr({ url: click, headers: headers });
-            }
-            if (pcorm) {
-                FuckD.search.pc.progress += 3;
-                if (FuckD.search.pc.progress > FuckD.search.pc.max) FuckD.search.pc.progress = FuckD.search.pc.max;
-            } else {
-                FuckD.search.m.progress += 3;
-                if (FuckD.search.m.progress > FuckD.search.m.max) FuckD.search.m.progress = FuckD.search.m.max;
-            }
-        }
-    } catch (e) {
-        FuckF.log("🔴", `搜索任务出错！🔛${e.message}`);
-    }
-    FuckD.search.index++;
-    return false;
-}
-
-FuckF.mainlandCheck = async () => {
-const hash = ["g", "e", "o", "i", "s", "a", "m"].join("")
-if (!GM_info.script.header.includes(hash)) {
-    FuckD.bing.mainland = -1
-    return true
-}
-const result = await FuckF.xhr({
-    url: `https://${FuckD.bing.host}/`,
-    headers: {
-        "cookie": FuckD.cookie.mkt,
-    },
-})
-if (result) {
-    const res = result.replace(/\s/g, "")
-    const data = res.match(/Region:"(.*?)"(.*?)RevIpCC:"(.*?)"/)
-    if (data) {
-        const ipcc = data[3].toUpperCase()
-        FuckD.bing.region = ipcc
-        if (FuckD.bing.status && ipcc != "CN") {
-            const result = await FuckF.xhr({
-                url: "https://disp-qryapi.3g.qq.com/v1/dispatch",
-                headers: {
-                    "referer": "https://3g.qq.com/",
-                },
-            })
-            if (result && FuckF.isJSON(result)) {
-                const res = JSON.parse(result)
-                const status = res.code
-                FuckD.bing.ip = status == 0 ? res.extra.ip : ""
-                FuckD.bing.ipInfo = status == 0 ? `\n🌏${res.ipInfo}` : ""
-            }
-            return true
-        }
-    }
-}
-return false
-}
-
-FuckF.send = async (webhook) => {
-const now = new Date()
-FuckD.bing.datetimeLocaleStr = now.toLocaleString()
-await Promise.all(webhook.map(async (i) => {
-    if (!i.key) return
-    let message = `「${i.name}」消息推送`
-    try {
-        const result = await FuckF.xhr({
-            method: "POST",
-            url: i.url + i.key,
-            headers: {
-                "content-type": "application/json; charset=UTF-8",
-            },
-            data: JSON.stringify(i.msg),
-        })
-        if (result) FuckF.log("🟣", `${message}完成 🔛${result}`)
-    } catch (e) {
-        FuckF.log("🔴", `消息推送出错！🔛${e.message}`)
-    }
-}))
-}
-return new Promise((resolve, reject) => {
-const seconds = FuckF.getTimestamp()
-GM_cookie("delete", { url: "https://bing.com", name: "_EDGE_S" })
-FuckD.search.limit = FuckF.getScopeRandomNum(4, 7)
-FuckD.bing.dateNowNum = FuckF.getDatetime(true)
-FuckD.bing.dateNowhyphen = FuckF.getDatetime(false, false)
-const tasksArr = GM_getValue("Config.tasks", false)
-FuckD.sign.date = tasksArr ? tasksArr.sign : 0
-FuckD.read.date = tasksArr ? tasksArr.read : 0
-FuckD.promos.date = tasksArr ? tasksArr.promos : 0
-FuckD.search.date = tasksArr ? tasksArr.search : 0
-if (FuckD.api.mode != "offline") {
-    const defaultApiName = "hot.baiwumm.com"
-    const currentApiName = GM_getValue("Config.api", defaultApiName)
-    const apiConfigMap = new Map(FuckD.api.arr)
-    const getConfigApi = apiConfigMap.get(currentApiName) || apiConfigMap.get(defaultApiName)
-    FuckD.api.url = getConfigApi.url
-    FuckD.api.hot = getConfigApi.hot
-    if (!apiConfigMap.has(currentApiName)) {
-        GM_setValue("Config.api", "offline")
-        FuckF.log("🟡", "搜索词接口配置错误！已替换为offline。")
-    }
-}
-
-FuckF.tasksEnd = async () => {
-    if (FuckD.bing.code < 0) {
-        FuckD.bing.mainland--
-        FuckD.bing.mainland < 0 || FuckF.log("🟡", `当前 IP 非中国大陆地区，脚本停止运行。\n⛔${FuckD.bing.ip}-${FuckD.bing.region}${FuckD.bing.ipInfo}`, true)
-        resolve()
-    }
-    const endS = !FuckD.tasks.sign || FuckD.sign.end > 0;
-    const endR = !FuckD.tasks.read || FuckD.read.end > 0;
-    const endP = !FuckD.tasks.promos || FuckD.promos.end > 0;
-    const endSe = !FuckD.tasks.search || FuckD.search.end > 0;
-    if (endS && endR && endP && endSe) {
-        FuckD.bing.end--
-        if (FuckD.bing.end === 0) {
-            const checkDone = (taskEnabled, taskDate) => !taskEnabled || taskDate == FuckD.bing.dateNowNum;
-            const isAllDone = checkDone(FuckD.tasks.sign, FuckD.sign.date) && checkDone(FuckD.tasks.read, FuckD.read.date) && checkDone(FuckD.tasks.promos, FuckD.promos.date) && checkDone(FuckD.tasks.search, FuckD.search.date);
-            if (isAllDone) {
-                const allDoneDate = GM_getValue("Config.allDoneDate", 0);
-                if (allDoneDate != FuckD.bing.dateNowNum) {
-                    GM_setValue("Config.allDoneDate", FuckD.bing.dateNowNum);
-                    const dashboard = await FuckF.getRewardsInfo();
-                    const availablePoints = dashboard?.userStatus?.availablePoints || 0;
-                    const todayPoints = FuckD.bing.todayTotalPoints || dashboard?.userStatus?.counters?.dailyPoint?.[0]?.pointProgress || 0;
-                    FuckD.bing.sendMSG = `今日所选任务已全部完成！\n✨今日共获取：${todayPoints} 积分\n💰 当前总积分：${availablePoints} 积分`;
-                    FuckF.log("🎉", FuckD.bing.sendMSG, true);
-                    FuckF.send(FuckD.wh);
-                } else {
-                    FuckF.log("💤", "今日所选任务已全部完成，继续保持休眠...");
-                }
-            } else {
-                FuckF.log("🟣", `本次运行结束！用时 ${(FuckF.getTimestamp() - seconds) / 1000} 秒`);
-            }
-        }
-        resolve()
-    }
-}
-
-FuckF.signStart = async () => {
-    const result = await FuckF.taskSign()
-    if (!result) {
-        setTimeout(() => { FuckF.signStart() }, FuckD.bing.time)
-    } else {
-        FuckF.tasksEnd()
-    }
-}
-
-FuckF.readStart = async () => {
-    const result = await FuckF.taskRead()
-    if (!result) {
-        setTimeout(() => { FuckF.readStart() }, FuckD.bing.time)
-    } else {
-        FuckF.tasksEnd()
-    }
-}
-
-FuckF.promosStart = async () => {
-    const result = await FuckF.taskPromos()
-    if (!result) {
-        setTimeout(() => { FuckF.promosStart() }, FuckD.bing.time)
-    } else {
-        FuckF.tasksEnd()
-    }
-}
-
-FuckF.searchStart = async () => {
-    const result = await FuckF.taskSearch()
-    if (!result) {
-        let timespan = FuckD.bing.time
-        if (FuckD.search.index < FuckD.search.limit) {
-            const span = Number(FuckD.bing.span) || 30;
-            const spanMIN = (span - 15) * 1000
-            const spanMAX = (span + 15) * 1000
-            timespan = FuckF.getScopeRandomNum(spanMIN, spanMAX)
-        }
-        FuckF.log("🔵", `第 ${FuckD.search.index}/${FuckD.search.limit} 次搜索完成\n(${FuckD.search.device})，等待 ${timespan / 1000} 秒后继续...`)
-        setTimeout(() => { FuckF.searchStart() }, timespan)
-    } else {
-        FuckF.tasksEnd()
-    }
-}
-
-FuckF.tasksStart = async (initDelay = 0) => {
-    if (GM_info.script.author != "geoisam@qq.com") resolve()
-    const host = "www.bing.com"
-    if (!FuckD.bing.host) {
-        if (FuckD.bing.status) {
-            FuckD.bing.host = "cn.bing.com"
-        } else {
-            let url = await FuckF.xhr({
-                url: `https://${host}/`,
-                headers: {
-                    "cookie": FuckD.cookie.mkt,
-                },
-            }, true)
-            url = new URL(url)
-            FuckD.bing.host = url ? url.host : host
-        }
-    }
-    const fucker = await FuckF.mainlandCheck()
-       if (fucker) {
-        FuckD.bing.code = -1
-        FuckF.tasksEnd()
-    } else {
-        const isKeep = GM_getValue("Config.keep", true);
-        const needSign = FuckD.tasks.sign && (isKeep || FuckD.sign.date != FuckD.bing.dateNowNum);
-        const needRead = FuckD.tasks.read && (isKeep || FuckD.read.date != FuckD.bing.dateNowNum);
-        const needPromos = FuckD.tasks.promos && (isKeep || FuckD.promos.date != FuckD.bing.dateNowNum);
-        const needSearch = FuckD.tasks.search && (isKeep || FuckD.search.date != FuckD.bing.dateNowNum);
-        FuckF.log("🟣", `初始化运行完成！用时 ${((FuckF.getTimestamp() - seconds) - initDelay) / 1000} 秒`);
-        await FuckF.renewToken(); 
-        if (needPromos || needSearch) {
-            const result = await FuckF.getRewardsInfo();
-            if (!result) {
-                FuckF.log("🔴", "请检查 rewards.bing.com 是否登录！", true);
-                resolve();
-            } else {
-                if (needPromos) setTimeout(() => { FuckF.promosStart() }, FuckD.bing.time * 2);
-                if (needSearch) {
-                    const counters = result.userStatus?.counters || {};
-                    const pcPro = counters.pcSearch?.[0]?.pointProgress || 0;
-                    let pcMax = counters.pcSearch?.[0]?.pointProgressMax || 0;
-                    const mPro = counters.mobileSearch?.[0]?.pointProgress || 0;
-                    let mMax = counters.mobileSearch?.[0]?.pointProgressMax || 0;
-                    if (pcMax === 0) pcMax = 60;
-                    if (mMax === 0) mMax = 0;
-                    if (pcPro >= pcMax && mPro >= mMax) {
-                        FuckD.search.end++;
-                        if (FuckD.search.date != FuckD.bing.dateNowNum) {
-                            FuckD.search.date = FuckD.bing.dateNowNum;
-                            GM_setValue("Config.tasks", FuckD.bing.tasks);
-                            const pcReport = pcMax ? `\n💻电脑搜索：${pcPro}/${pcMax}` : "";
-                            const mReport = mMax ? `\n📱移动设备搜索：${mPro}/${mMax}` : "";
-                            FuckD.bing.sendMSG = `搜索任务已完成！${pcReport}${mReport}`;
-                            FuckF.log("🟣", FuckD.bing.sendMSG, true);
-                            FuckF.send(FuckD.wh);
-                        }
-                        FuckF.tasksEnd();
-                    } else {
-                        const timespan = FuckF.getScopeRandomNum(15000, 45000);
-                        FuckF.log("🔵", `搜索积分未满，停留 ${timespan / 1000} 秒后开始搜索...`);
-                        setTimeout(() => { FuckF.searchStart() }, timespan);
-                    }
-                } else {
-                    FuckF.searchStart();
-                }
-            }
-        } else {
-            FuckF.promosStart();
-            FuckF.searchStart();
-        }
-        if (needSign) {
-            setTimeout(() => { FuckF.signStart() }, FuckD.bing.time);
-        } else {
-            FuckF.signStart();
-        }
-        if (needRead) {
-            setTimeout(() => { FuckF.readStart() }, FuckD.bing.time * 3);
-        } else {
-            FuckF.readStart();
-        }
-    }
-}
-    const isKeep = GM_getValue("Config.keep", true);
-    const checkDone = (taskEnabled, taskDate) => !taskEnabled || taskDate == FuckD.bing.dateNowNum;
-    const isAllDone = checkDone(FuckD.tasks.sign, FuckD.sign.date) && checkDone(FuckD.tasks.read, FuckD.read.date) && checkDone(FuckD.tasks.promos, FuckD.promos.date) && checkDone(FuckD.tasks.search, FuckD.search.date);
-    if ((!isKeep && isAllDone) || !FuckD.bing.repo.includes("geoisam") || (!FuckD.tasks.sign && !FuckD.tasks.read && !FuckD.tasks.promos && !FuckD.tasks.search)) {
-        if (isAllDone) {
-            const allDoneDate = GM_getValue("Config.allDoneDate", 0);
-            if (allDoneDate != FuckD.bing.dateNowNum) {
-                (async () => {
-                    GM_setValue("Config.allDoneDate", FuckD.bing.dateNowNum);
-                    const dashboard = await FuckF.getRewardsInfo();
-                    const availablePoints = dashboard?.userStatus?.availablePoints || 0;
-                    const todayPoints = FuckD.bing.todayTotalPoints || dashboard?.userStatus?.counters?.dailyPoint?.[0]?.pointProgress || 0;
-                    FuckD.bing.sendMSG = `今日所选任务已全部完成！\n✨今日共获取：${todayPoints} 积分\n💰 当前总积分：${availablePoints} 积分`;
-                    FuckF.log("🎉", FuckD.bing.sendMSG, true);
-                    FuckF.send(FuckD.wh);
-                    resolve();
-                })();
-            } else {
-                FuckF.log("💤", "今日所选任务已全部完成，继续保持休眠...");
-                resolve();
-            }
-        } else {
-            resolve();
-        }
-    } else {
-        const initDelay = FuckF.getScopeRandomNum(1000, 60000);
-        FuckF.log("⏳", `为规避定时器特征，停留 ${initDelay / 1000} 秒后运行...`);
-        setTimeout(() => {
-            FuckF.tasksStart(initDelay);
-        }, initDelay);
-    }
-})
