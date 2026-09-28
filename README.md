@@ -17,7 +17,9 @@
 - [获取 Rewards Cookie](https://rewards.bing.com/earn?egern_capture=1)
 - [获取 Bing Cookie](https://www.bing.com/?egern_capture=1)
 
-保存通知仅表示凭据写入本地，随后运行小组件核对余额。普通浏览不保存 Cookie；请求继续正常加载。Cookie 不写入仓库、不出现在脚本日志或通知中，仅保存在手机 Egern，并由积分脚本发往对应微软域名。
+v3 捕获通知可直接点按，复制完整 Cookie，再粘贴到 Env：Rewards 值填写小组件和定时任务的 `REWARDS_COOKIE`，Bing 值填写定时任务的 `BING_COOKIE`。即使本地保存失败，也能通过复制动作手动填写。保存或复制成功不代表登录有效，随后运行小组件核对余额。
+
+普通浏览不保存 Cookie；请求继续正常加载。Cookie 不写入仓库或脚本日志，通知正文不展开凭据，完整值由通知的剪贴板动作携带，点按后复制；原积分请求只发往对应微软域名。
 
 ## 使用说明
 
@@ -25,8 +27,8 @@
 - [积分小组件与定时任务配置](REWARDS.md)
 - [来源说明](THIRD_PARTY_NOTICES.md)
 
-Cookie v2 移除了固定登录 Cookie 名称限制，兼容分段 Cookie 请求头，并区分缺少请求头与格式错误；保存成功后仍需查询验证。更新后通知标题包含 `Cookie v2`，若仍显示旧提示请刷新 Egern 的脚本缓存。
+Cookie v3 保留格式校验和分段 Cookie 支持，新增点按通知复制。更新后通知标题包含 `Cookie v3`，若仍显示旧提示请刷新 Egern 的脚本缓存。
 
-本地模拟验证：42 项测试通过，其中 12 项覆盖 Cookie 获取和模块路由。用户实机截图确认旧获取入口可以触发，但修正版的实际获取与跨脚本读取仍待确认；后台调度及实际到账尚未实测。官方未明确保证跨脚本 storage 共享；若已保存仍提示缺少 Cookie，先检查版本与 ACCOUNT_ID，必要时退回 Env 手填。
+本地模拟验证：46 项测试通过，其中 16 项覆盖 Cookie 获取、复制、Env 手填与模块路由。通知点按复制的原生行为仍待 iPhone 实测；后台调度及实际到账尚未实测。截图中的缺少凭据提示尚不足以确认跨脚本存储隔离的具体原因，手动复制填入 Env 的路径不依赖该共享行为。
 
 原脚本来源为 [ScriptCat #5979](https://scriptcat.org/zh-CN/script-show-page/5979)，作者 zxwbn01 / zxwbn@foxmail.com，迁移基于 v3.6.90。源文件未声明许可证，本仓库保留署名，不将迁移代码重新标为 MIT。

@@ -2,7 +2,7 @@
  * Source author: zxwbn@foxmail.com / zxwbn01; source has no declared license.
  * See README.md for source provenance, configuration and verification limits.
  * Generic queries/renders; schedule runs bounded tasks; request captures opt-in cookies.
- * Cookie capture revision: 2026-09-28.2 (format checks, not cookie-name assumptions).
+ * Cookie capture revision: 2026-09-28.3 (tap notification to copy the full Cookie).
  */
 const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
 const MR_APP='https://prod.rewardsplatform.microsoft.com';
@@ -72,7 +72,7 @@ function mrValidCookie(value){
 }
 function mrCapture(r){
   const {ctx}=r;
-  const notice=body=>{try{ctx.notify?.({title:'Microsoft Rewards · Cookie v2',body,sound:false});}catch{}};
+  const notice=(body,cookie)=>{try{ctx.notify?.({title:'Microsoft Rewards · Cookie v3',body,sound:false,...(cookie?{action:{type:'clipboard',text:cookie}}:{})});}catch{}};
   try{
     const req=ctx.request,url=new URL(req.url);
     if(req.method!=='GET'||url.protocol!=='https:'||url.port||url.username||url.password||url.searchParams.get('egern_capture')!=='1')return;
@@ -84,11 +84,16 @@ function mrCapture(r){
     const cookie=parts?.length?parts.join('; '):headers.get('cookie');
     if(cookie===null||cookie===undefined||cookie===''){notice(label+' 未保存：本次请求未携带 Cookie。请在显示已登录的同一 Safari 标签页重新打开获取链接。');return;}
     if(!mrValidCookie(cookie)){notice(label+' 未保存：Cookie 请求头格式异常、内容全空或超过 32 KB；已保留原凭据。');return;}
-    const previous=mrLoad(r,'cookie:'+kind);
-    // Discard a prior balance before changing credentials, but preserve task receipts.
-    if(kind==='rewards'&&previous?.value!==cookie)ctx.storage.set(r.prefix+'snapshot','');
-    mrSave(r,'cookie:'+kind,{host:url.hostname,value:cookie,at:Date.now()});
-    notice(label+' Cookie 已保存到本机，待查询验证登录状态；请刷新小组件。Env 手填值优先。');
+    let saved=false;
+    try{
+      const previous=mrLoad(r,'cookie:'+kind);
+      // Discard a prior balance before changing credentials, but preserve task receipts.
+      if(kind==='rewards'&&previous?.value!==cookie)ctx.storage.set(r.prefix+'snapshot','');
+      mrSave(r,'cookie:'+kind,{host:url.hostname,value:cookie,at:Date.now()});
+      saved=true;
+    }catch{} // Copying must also work when persistence is unavailable or isolated.
+    const envKey=kind==='rewards'?'REWARDS_COOKIE':'BING_COOKIE';
+    notice(envKey+' 已捕获，点按本通知复制完整值，再粘贴到脚本 Env 的同名字段。'+(saved?'本地已保存':'本地保存失败，仍可复制')+'；待查询验证登录状态。',cookie);
   }catch{notice('Cookie 保存失败，请检查 Egern 本地存储和脚本配置；原网页继续加载。');}
 }
 function mrEnabled(e,key,fallback=true){const v=e[key];return v===undefined||v===''?fallback:!['false','0','off','no'].includes(String(v).toLowerCase());}
