@@ -1,5 +1,5 @@
-name: Microsoft Rewards Cookie 获取
-description: 登录后在 Safari 打开专用获取链接，保存 Cookie 到 Egern 本地，供配套积分脚本读取。
+name: Microsoft Rewards Cookie 与授权码获取
+description: 专用链接捕获 Cookie；带标记的微软授权回跳通过通知复制 AUTH_CODE。
 icon: key.fill
 homepage: https://github.com/7892798-hash/-
 manual: https://github.com/7892798-hash/-/blob/main/COOKIE-CAPTURE.md
@@ -13,6 +13,7 @@ mitm:
   hostnames:
     - rewards.bing.com
     - www.bing.com
+    - login.live.com
 scriptings:
   - http_request:
       name: ms-rewards-cookie-capture
@@ -22,3 +23,9 @@ scriptings:
       body_required: false
       env:
         ACCOUNT_ID: personal
+  - http_request:
+      name: ms-rewards-auth-capture
+      match: '^https://login\.live\.com/oauth20_desktop\.srf\?(?:[^&#]*&)*state=egern_rewards_auth_v1(?:&[^#]*)?$'
+      script_url: https://raw.githubusercontent.com/7892798-hash/-/main/micsoft.js
+      timeout: 5
+      body_required: false
