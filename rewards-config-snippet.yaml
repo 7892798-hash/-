@@ -1,0 +1,38 @@
+# 配置片段：合并到现有配置对应字段，不要覆盖你的代理配置。
+# 脚本使用本仓库远程地址。
+# 同一个 ACCOUNT_ID 的定时脚本和小组件使用相同凭据。
+# 可选自动获取模块见 rewards-cookie-capture.module.yaml；使用时两项 Cookie 留空。
+scriptings:
+  - generic:
+      name: ms-rewards-widget
+      script_url: https://raw.githubusercontent.com/7892798-hash/-/main/micsoft.js
+      timeout: 60
+      env:
+        ACCOUNT_ID: personal
+        REWARDS_COOKIE: ""
+        BING_COOKIE: ""
+        TIMEZONE: Asia/Shanghai
+  - schedule:
+      name: ms-rewards-worker
+      script_url: https://raw.githubusercontent.com/7892798-hash/-/main/micsoft.js
+      cron: "*/20 * * * *"
+      timeout: 180
+      disabled: true # 手机端填好凭据后改为 false。
+      env:
+        ACCOUNT_ID: personal
+        REWARDS_COOKIE: ""
+        BING_COOKIE: ""
+        AUTH_CODE: ""
+        REFRESH_TOKEN: ""
+        TASK_SIGN: "true"
+        TASK_READ: "true"
+        TASK_PROMOS: "true"
+        TASK_SEARCH: "true"
+        LOCK_CN: "true"
+        COUNTRY: cn
+        TIMEZONE: Asia/Shanghai
+        TIMEZONE_OFFSET: "-480"
+        NOTIFY: "false"
+widgets:
+  - name: 微软积分
+    script_name: ms-rewards-widget

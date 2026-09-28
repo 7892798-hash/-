@@ -1,7 +1,7 @@
 /* Microsoft Rewards for Egern — personal migration of ScriptCat #5979 v3.6.90.
  * Source author: zxwbn@foxmail.com / zxwbn01; source has no declared license.
  * See README.md for source provenance, configuration and verification limits.
- * Generic execution only queries/renders. Schedule execution runs bounded tasks.
+ * Generic queries/renders; schedule runs bounded tasks; request captures opt-in cookies.
  */
 const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
 const MR_APP='https://prod.rewardsplatform.microsoft.com';
@@ -10,11 +10,18 @@ const MR_PC='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome
 const MR_MOBILE='Mozilla/5.0 (Linux; Android 16) AppleWebKit/537.36 Chrome/123.0.0.0 Mobile Safari/537.36 EdgA/123.0.2420.102';
 
 export default async function(ctx){
-  const e=ctx.env||{},account=String(e.ACCOUNT_ID||'default').trim(),prefix='msrewards:v1:'+account+':';
+  const e={...ctx.env},account=String(e.ACCOUNT_ID||'default').trim(),prefix='msrewards:v1:'+account+':';
   const r={ctx,e,prefix,deadline:Date.now()+160000};
+  // Request/response contexts must never fall through into queries or earning tasks.
+  if(ctx.request){if(!ctx.response)mrCapture(r);return;}
   const scheduled=typeof ctx.cron==='string'&&ctx.cron.length>0;
   let lockId=null;
   try{
+    for(const [key,kind,host] of [['REWARDS_COOKIE','rewards','rewards.bing.com'],['BING_COOKIE','bing','www.bing.com']]){
+      if(String(e[key]||'').trim())continue;
+      const saved=mrLoad(r,'cookie:'+kind);
+      e[key]=saved?.host===host&&mrValidCookie(saved.value)?saved.value:'';
+    }
     if(scheduled){
       const lock=mrLoad(r,'lock');if(lock?.until>Date.now())return;
       lockId=mrId();mrSave(r,'lock',{id:lockId,until:Date.now()+200000});
@@ -56,6 +63,27 @@ export default async function(ctx){
     if(scheduled&&lockId){try{if(mrLoad(r,'lock')?.id===lockId)mrSave(r,'lock',{until:0});}catch{}}
   }
 }
+function mrValidCookie(value){
+  return typeof value==='string'&&value.length<=32768&&!/[\r\n\x00]/.test(value)&&value.split(';').some(part=>/^\s*(?:_U|MSPAuth|RPSSecAuth)\s*=\s*\S+/.test(part));
+}
+function mrCapture(r){
+  const {ctx}=r;
+  const notice=body=>{try{ctx.notify?.({title:'Microsoft Rewards · Cookie',body,sound:false});}catch{}};
+  try{
+    const req=ctx.request,url=new URL(req.url);
+    if(req.method!=='GET'||url.protocol!=='https:'||url.port||url.username||url.password||url.searchParams.get('egern_capture')!=='1')return;
+    const kind=url.hostname==='rewards.bing.com'&&['/','/earn'].includes(url.pathname)?'rewards':url.hostname==='www.bing.com'&&url.pathname==='/'?'bing':null;
+    if(!kind)return;
+    const label=kind==='rewards'?'Rewards':'Bing';
+    const cookie=ctx.request.headers.get('cookie');
+    if(!mrValidCookie(cookie)){notice(label+' 未保存：未识别到有效格式的登录 Cookie。先登录，再重新打开获取链接。');return;}
+    const previous=mrLoad(r,'cookie:'+kind);
+    // Discard a prior balance before changing credentials, but preserve task receipts.
+    if(kind==='rewards'&&previous?.value!==cookie)ctx.storage.set(r.prefix+'snapshot','');
+    mrSave(r,'cookie:'+kind,{host:url.hostname,value:cookie,at:Date.now()});
+    notice(label+' Cookie 已保存到本机；请刷新小组件验证登录状态。Env 手填值优先。');
+  }catch{notice('Cookie 保存失败，请检查 Egern 本地存储和脚本配置；原网页继续加载。');}
+}
 function mrEnabled(e,key,fallback=true){const v=e[key];return v===undefined||v===''?fallback:!['false','0','off','no'].includes(String(v).toLowerCase());}
 function mrLoad(r,key){const raw=r.ctx.storage.get(r.prefix+key);if(!raw)return null;try{return JSON.parse(raw);}catch{throw Error('本地状态损坏，请更换 ACCOUNT_ID 后重新配置');}}
 function mrSave(r,key,value){r.ctx.storage.set(r.prefix+key,JSON.stringify(value));}
@@ -71,7 +99,7 @@ async function mrRequest(r,method,url,kind,body,headers={}){
   const h={'User-Agent':kind==='app'?MR_MOBILE:MR_PC,...headers};
   if(kind==='web'||kind==='bing'){
     const cookie=kind==='web'?r.e.REWARDS_COOKIE:r.e.BING_COOKIE;
-    if(!cookie)throw mrFault('缺少 '+(kind==='web'?'REWARDS_COOKIE':'BING_COOKIE')+'，请在手机 Env 填写');
+    if(!cookie)throw mrFault('缺少 '+(kind==='web'?'REWARDS_COOKIE':'BING_COOKIE')+'，请打开配套 Cookie 获取链接或在 Env 填写',true);
     h.Cookie=headers.Cookie||cookie;
   }
   // Explicit cookie routing. Never let redirects forward credentials off-domain.

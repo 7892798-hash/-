@@ -1,0 +1,24 @@
+name: Microsoft Rewards Cookie 获取
+description: 登录后在 Safari 打开专用获取链接，保存 Cookie 到 Egern 本地，供配套积分脚本读取。
+icon: key.fill
+homepage: https://github.com/7892798-hash/-
+manual: https://github.com/7892798-hash/-/blob/main/COOKIE-CAPTURE.md
+open_url: https://rewards.bing.com/earn?egern_capture=1
+env_schema:
+  ACCOUNT_ID:
+    name: 账户标识
+    description: 必须与积分小组件、定时任务一致。换微软账户时使用新标识。
+    default_value: personal
+mitm:
+  hostnames:
+    - rewards.bing.com
+    - www.bing.com
+scriptings:
+  - http_request:
+      name: ms-rewards-cookie-capture
+      match: '^https://(?:rewards\.bing\.com/(?:earn)?|www\.bing\.com/)\?egern_capture=1(?:&[^#]*)?$'
+      script_url: https://raw.githubusercontent.com/7892798-hash/-/main/micsoft.js
+      timeout: 5
+      body_required: false
+      env:
+        ACCOUNT_ID: personal
