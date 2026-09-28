@@ -3,6 +3,7 @@
  * See README.md for source provenance, configuration and verification limits.
  * Generic queries/renders; schedule runs bounded tasks; request captures opt-in cookies.
  * Cookie capture revision: 2026-09-28.3 (tap notification to copy the full Cookie).
+ * Widget revision: 2026-09-28.4 (natural-height sections and complete-counter fallback).
  */
 const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
 const MR_APP='https://prod.rewardsplatform.microsoft.com';
@@ -146,7 +147,10 @@ async function mrSnapshot(r){
   const u=api?.userStatus||{},c=u.counters||{},day=mrDay(r.e.TIMEZONE||'Asia/Shanghai'),d=day.split('-');
   const dailyKey=d.length===3?d[1]+'/'+d[2]+'/'+d[0]:'';
   const promos=[...(api?.dailySetPromotions?.[dailyKey]||[]),...(api?.morePromotions||[])].filter(p=>p.priority>-2&&p.exclusiveLockedFeatureStatus!=='locked');
-  const out={balance:mrNumeric(u.availablePoints),pc:mrCounter(c.pcSearch),mobile:mrCounter(c.mobileSearch),today:mrCounter(c.dailyPoint).current,...earn,level:u.levelInfo?.activeLevel||'',promos:promos.map(p=>({id:p.offerId,hash:p.hash,title:p.title||p.offerId,complete:!!p.complete})),at:Date.now(),day};
+  // Select a whole counter from one source; never pair a progress value with another source's limit.
+  const complete=x=>x&&x.current!==null&&x.max!==null;
+  const counter=(primary,fallback)=>complete(primary)?primary:complete(fallback)?fallback:primary||fallback;
+  const out={balance:earn?.balance??mrNumeric(u.availablePoints),pc:counter(earn?.pc,mrCounter(c.pcSearch)),mobile:counter(earn?.mobile,mrCounter(c.mobileSearch)),today:earn?.today??mrCounter(c.dailyPoint).current,level:u.levelInfo?.activeLevel||'',promos:promos.map(p=>({id:p.offerId,hash:p.hash,title:p.title||p.offerId,complete:!!p.complete})),at:Date.now(),day};
   out.earnTasks=mrEarnTasks(html);return out;
 }
 function mrEarnTasks(html){
@@ -244,22 +248,27 @@ function mrNumber(v){return v===null||v===undefined?'—':Number(v).toLocaleStri
 function mrTxt(text,size=12,color='#F5F7FC',extra={}){return {type:'text',text:String(text),font:{size,weight:'medium'},textColor:color,maxLines:1,minScale:0.65,...extra};}
 function mrRow(children,extra={}){return {type:'stack',direction:'row',alignItems:'center',gap:7,children,...extra};}
 function mrCol(children,extra={}){return {type:'stack',direction:'column',alignItems:'start',gap:4,children,...extra};}
-function mrBar(name,c,color,width=130){const ratio=c.max>0&&c.current!==null?Math.min(1,Math.max(0,c.current/c.max)):0;return mrCol([mrRow([mrTxt(name,10,'#ADBBD0'),{type:'spacer'},mrTxt(mrNumber(c.current)+' / '+mrNumber(c.max),11)]),mrRow([...(ratio>0?[{type:'stack',height:5,flex:ratio,backgroundColor:color,borderRadius:3,children:[]}]:[]),...(ratio<1?[{type:'stack',height:5,flex:1-ratio,backgroundColor:'#FFFFFF16',borderRadius:3,children:[]}]:[])],{gap:0,width})]);}
+function mrBar(name,c,color,width=130){const ratio=c.max>0&&c.current!==null?Math.min(1,Math.max(0,c.current/c.max)):0;return mrCol([mrRow([mrTxt(name,10,'#ADBBD0'),{type:'spacer'},mrTxt(c.current===null||c.max===null?'额度未知':mrNumber(c.current)+' / '+mrNumber(c.max),11)]),mrRow([...(ratio>0?[{type:'stack',height:5,flex:ratio,backgroundColor:color,borderRadius:3,children:[]}]:[]),...(ratio<1?[{type:'stack',height:5,flex:1-ratio,backgroundColor:'#FFFFFF16',borderRadius:3,children:[]}]:[])],{gap:0,width})],{width,gap:5});}
 function mrWidget(ctx,snap,state,status){
   const family=ctx.widgetFamily||'systemMedium',small=family==='systemSmall',large=family==='systemLarge'||family==='systemExtraLarge';
   const notes=state.notes||{},error=(()=>{try{return JSON.parse(ctx.storage.get('msrewards:v1:'+(ctx.env?.ACCOUNT_ID||'default')+':lastError')||'null');}catch{return null;}})();
   if(family.startsWith('accessory'))return {type:'widget',url:MR_WEB+'/',children:[{type:'text',text:family==='accessoryInline'?'Rewards '+mrNumber(snap.balance)+' · '+status:mrNumber(snap.balance),font:{size:family==='accessoryCircular'?16:20,weight:'bold'},minScale:0.5,maxLines:1},...(family==='accessoryInline'?[]:[{type:'text',text:status,font:{size:9},maxLines:1}])]};
   const oldDay=snap.day!==mrDay(ctx.env?.TIMEZONE||'Asia/Shanghai');
-  const balance=mrCol([mrTxt('可用积分',10,'#ADBBD0'),mrTxt(mrNumber(snap.balance),small?30:36,'#FFFFFF',{font:{size:small?30:36,weight:'bold'}}),mrTxt((oldDay?'上次记录':'今日')+' +'+mrNumber(snap.today),10,'#8AE0BB')],{flex:1});
-  const progress=mrCol([mrBar('电脑搜索',snap.pc,'#72B7FF',large?280:130),mrBar('手机搜索',snap.mobile,'#8AE0BB',large?280:130)],{flex:1,gap:10});
-  const children=[mrRow([mrTxt(small?'REWARDS':'MICROSOFT / REWARDS',9,'#8FC5FF'),{type:'spacer'},mrTxt(oldDay?'跨日缓存':status,8,'#ADBBD0')]),{type:'spacer'}];
+  const balance=mrCol([mrTxt('可用积分',10,'#ADBBD0'),mrTxt(mrNumber(snap.balance),small?28:36,'#FFFFFF',{font:{size:small?28:36,weight:'bold'}}),mrTxt((oldDay?'上次记录':'今日')+' +'+mrNumber(snap.today),10,'#8AE0BB')]);
+  const progress=mrCol([mrBar('电脑搜索',snap.pc,'#72B7FF',large?280:130),mrBar('手机搜索',snap.mobile,'#8AE0BB',large?280:130)],{gap:10});
+  const children=[mrRow([mrTxt(small?'REWARDS':'MICROSOFT / REWARDS',9,'#8FC5FF'),{type:'spacer'},mrTxt(oldDay?'跨日缓存':status,8,'#ADBBD0')])];
   if(small)children.push(balance,mrTxt('电脑 '+mrNumber(snap.pc.current)+' / '+mrNumber(snap.pc.max),10,'#ADBBD0'),mrTxt('手机 '+mrNumber(snap.mobile.current)+' / '+mrNumber(snap.mobile.max),10,'#ADBBD0'));
   else if(large)children.push(balance,progress);
-  else children.push(mrRow([balance,progress],{gap:18}));
+  else children.push(mrRow([{...balance,flex:1},progress],{gap:18}));
+  if(large){
+    const tasks=[mrRow([mrTxt('任务执行记录',12,'#8AE0BB'),{type:'spacer'},...(state.lastRun?[{type:'date',date:new Date(state.lastRun).toISOString(),format:'relative',font:{size:9},textColor:'#ADBBD0'}]:[])])];
+    for(const [key,label] of [['SIGN','签入'],['READ','阅读'],['PROMOS','活动'],['SEARCH','搜索']])tasks.push(mrRow([mrTxt(label,11,'#ADBBD0'),mrTxt(notes[key]||'无运行记录',11,'#F5F7FC',{flex:1,maxLines:1})]));
+    if(error&&error.at>(state.lastRun||0))tasks.push(mrTxt(error.message,9,'#FFC78A',{maxLines:2}));
+    children.push(mrCol(tasks,{gap:6}));
+  }
   children.push({type:'spacer'});
-  if(large){children.push(mrRow([mrTxt('任务状态',12,'#8AE0BB'),{type:'spacer'},mrTxt(snap.level,10,'#ADBBD0')]));for(const [key,label] of [['SIGN','签入'],['READ','阅读'],['PROMOS','活动'],['SEARCH','搜索']])children.push(mrRow([mrTxt(label,11,'#ADBBD0'),mrTxt(notes[key]||'尚未执行',11,'#F5F7FC',{flex:1,maxLines:1})]));if(error&&error.at>(state.lastRun||0))children.push(mrTxt(error.message,10,'#FFC78A',{maxLines:2}));}
   children.push(mrRow([mrTxt('查询',8,'#ADBBD0'),{type:'date',date:new Date(snap.at).toISOString(),format:'relative',font:{size:8},textColor:'#ADBBD0'},{type:'spacer'},mrTxt('点按打开 Rewards',8,'#ADBBD0')]));
-  return {type:'widget',url:MR_WEB+'/',padding:small?12:14,gap:small?5:7,backgroundGradient:{type:'linear',colors:['#101F39','#1A3353'],startPoint:{x:0,y:0},endPoint:{x:1,y:1}},refreshAfter:new Date(Date.now()+1800000).toISOString(),children};
+  return {type:'widget',url:MR_WEB+'/',padding:small?12:14,gap:small?5:large?12:7,backgroundGradient:{type:'linear',colors:['#101F39','#1A3353'],startPoint:{x:0,y:0},endPoint:{x:1,y:1}},refreshAfter:new Date(Date.now()+1800000).toISOString(),children};
 }
 function mrError(ctx,message){return {type:'widget',url:MR_WEB+'/',padding:ctx.widgetFamily?.startsWith('accessory')?0:14,gap:8,children:[mrTxt('Microsoft Rewards',14,'#74AFFF'),mrTxt(message,11,undefined,{maxLines:4})],refreshAfter:new Date(Date.now()+1800000).toISOString()};}
 
