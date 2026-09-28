@@ -5,6 +5,7 @@
  * Cookie capture revision: 2026-09-28.3 (tap notification to copy the full Cookie).
  * Widget revision: 2026-09-28.4 (natural-height sections and complete-counter fallback).
  * Worker revision: 2026-09-28.5 (bounded regional redirects and endpoint diagnostics).
+ * Auth capture revision: 2026-09-28.1 (opt-in callback, tap notification to copy AUTH_CODE).
  */
 const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
 const MR_APP='https://prod.rewardsplatform.microsoft.com';
@@ -16,7 +17,7 @@ export default async function(ctx){
   const e={...ctx.env},account=String(e.ACCOUNT_ID||'default').trim(),prefix='msrewards:v1:'+account+':';
   const r={ctx,e,prefix,deadline:Date.now()+160000};
   // Request/response contexts must never fall through into queries or earning tasks.
-  if(ctx.request){if(!ctx.response)mrCapture(r);return;}
+  if(ctx.request){if(!ctx.response){mrCaptureAuth(ctx);mrCapture(r);}return;}
   const scheduled=typeof ctx.cron==='string'&&ctx.cron.length>0;
   let lockId=null;
   try{
@@ -65,6 +66,21 @@ export default async function(ctx){
   }finally{
     if(scheduled&&lockId){try{if(mrLoad(r,'lock')?.id===lockId)mrSave(r,'lock',{until:0});}catch{}}
   }
+}
+function mrCaptureAuth(ctx){
+  const notice=(body,code)=>{try{ctx.notify?.({title:'Microsoft Rewards · Auth v1',body,sound:false,...(code?{action:{type:'clipboard',text:code}}:{})});}catch{}};
+  try{
+    const req=ctx.request,url=new URL(req.url);
+    if(req.method!=='GET'||url.protocol!=='https:'||url.hostname!=='login.live.com'||url.port||url.username||url.password||url.pathname!=='/oauth20_desktop.srf')return;
+    // This marker scopes capture; it is not a CSRF verifier. No token exchange or session changes here.
+    const states=url.searchParams.getAll('state');
+    if(states.length!==1||states[0]!=='egern_rewards_auth_v1')return;
+    if(url.searchParams.has('error')){notice('微软授权未完成或已取消，请重新打开配套授权链接登录。');return;}
+    const codes=url.searchParams.getAll('code'),code=codes[0];
+    if(codes.length!==1||!code||code.length>8192||/[^\x21-\x7E]/.test(code)){notice('未取得有效格式的 AUTH_CODE，请重新打开配套授权链接。');return;}
+    // Leave the code unconsumed and out of storage/logs. The user chooses the worker/account.
+    notice('AUTH_CODE 已捕获。点按本通知复制，粘贴到 ms-rewards-worker 的 Env → AUTH_CODE，保存后在 3 分钟内运行。尚未兑换授权令牌。',code);
+  }catch{} // Notification or malformed URL must never interrupt the login request.
 }
 function mrValidCookie(value){
   // Cookie names are not a documented authentication contract. Only validate transport format.
