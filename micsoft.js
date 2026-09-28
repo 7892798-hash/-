@@ -2,6 +2,7 @@
  * Source author: zxwbn@foxmail.com / zxwbn01; source has no declared license.
  * See README.md for source provenance, configuration and verification limits.
  * Generic queries/renders; schedule runs bounded tasks; request captures opt-in cookies.
+ * Cookie capture revision: 2026-09-28.2 (format checks, not cookie-name assumptions).
  */
 const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
 const MR_APP='https://prod.rewardsplatform.microsoft.com';
@@ -64,24 +65,30 @@ export default async function(ctx){
   }
 }
 function mrValidCookie(value){
-  return typeof value==='string'&&value.length<=32768&&!/[\r\n\x00]/.test(value)&&value.split(';').some(part=>/^\s*(?:_U|MSPAuth|RPSSecAuth)\s*=\s*\S+/.test(part));
+  // Cookie names are not a documented authentication contract. Only validate transport format.
+  if(typeof value!=='string'||!value.trim()||value.length>32768||/[\x00-\x1F\x7F]/.test(value))return false;
+  const pairs=value.split(';').map(part=>part.trim()).filter(Boolean);
+  return pairs.every(part=>/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+=[\x20-\x7E]*$/.test(part))&&pairs.some(part=>part.slice(part.indexOf('=')+1).trim().length>0);
 }
 function mrCapture(r){
   const {ctx}=r;
-  const notice=body=>{try{ctx.notify?.({title:'Microsoft Rewards · Cookie',body,sound:false});}catch{}};
+  const notice=body=>{try{ctx.notify?.({title:'Microsoft Rewards · Cookie v2',body,sound:false});}catch{}};
   try{
     const req=ctx.request,url=new URL(req.url);
     if(req.method!=='GET'||url.protocol!=='https:'||url.port||url.username||url.password||url.searchParams.get('egern_capture')!=='1')return;
     const kind=url.hostname==='rewards.bing.com'&&['/','/earn'].includes(url.pathname)?'rewards':url.hostname==='www.bing.com'&&url.pathname==='/'?'bing':null;
     if(!kind)return;
     const label=kind==='rewards'?'Rewards':'Bing';
-    const cookie=ctx.request.headers.get('cookie');
-    if(!mrValidCookie(cookie)){notice(label+' 未保存：未识别到有效格式的登录 Cookie。先登录，再重新打开获取链接。');return;}
+    // HTTP/2 may split Cookie into multiple fields; the separator must be '; ', not ', '.
+    const headers=req.headers,parts=typeof headers.getAll==='function'?headers.getAll('cookie'):null;
+    const cookie=parts?.length?parts.join('; '):headers.get('cookie');
+    if(cookie===null||cookie===undefined||cookie===''){notice(label+' 未保存：本次请求未携带 Cookie。请在显示已登录的同一 Safari 标签页重新打开获取链接。');return;}
+    if(!mrValidCookie(cookie)){notice(label+' 未保存：Cookie 请求头格式异常、内容全空或超过 32 KB；已保留原凭据。');return;}
     const previous=mrLoad(r,'cookie:'+kind);
     // Discard a prior balance before changing credentials, but preserve task receipts.
     if(kind==='rewards'&&previous?.value!==cookie)ctx.storage.set(r.prefix+'snapshot','');
     mrSave(r,'cookie:'+kind,{host:url.hostname,value:cookie,at:Date.now()});
-    notice(label+' Cookie 已保存到本机；请刷新小组件验证登录状态。Env 手填值优先。');
+    notice(label+' Cookie 已保存到本机，待查询验证登录状态；请刷新小组件。Env 手填值优先。');
   }catch{notice('Cookie 保存失败，请检查 Egern 本地存储和脚本配置；原网页继续加载。');}
 }
 function mrEnabled(e,key,fallback=true){const v=e[key];return v===undefined||v===''?fallback:!['false','0','off','no'].includes(String(v).toLowerCase());}
