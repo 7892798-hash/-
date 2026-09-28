@@ -4,7 +4,7 @@
  * Generic queries/renders; schedule runs bounded tasks; request captures opt-in cookies.
  * Cookie capture revision: 2026-09-28.3 (tap notification to copy the full Cookie).
  * Widget revision: 2026-09-28.7 (separate observed App search from mobile allowance).
- * Worker revision: 2026-09-28.8 (reportActivity and route verified in Edge deployment 20260921-4).
+ * Worker revision: 2026-09-28.9 (safe endpoint, storage and App search diagnostics).
  * Auth capture revision: 2026-09-28.1 (opt-in callback, tap notification to copy AUTH_CODE).
  */
 const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
@@ -66,11 +66,11 @@ export default async function(ctx){
     // Never infer points from submitted task count.
     try{snapshot=await mrSnapshot(r);mrSave(r,'snapshot',snapshot);for(const p of [...snapshot.promos,...snapshot.earnTasks]){const action=state.actions['promo:'+p.id];if(action&&p.complete){action.status='活动已确认';state.notes.PROMOS='活动已确认（服务端）';}}}catch{state.notes.QUERY='任务后查询失败，保留上次数据';}
     state.lastRun=Date.now();mrSave(r,'state',state);
-    if(ctx.storage.get(r.prefix+'lastError'))mrSave(r,'lastError',null);
-    if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards · Worker v8',body:'账户 '+account+'；余额 '+mrNumber(snapshot.balance)+'；'+Object.values(state.notes).join(' · ')});
+    if(mrLoad(r,'lastError'))mrSave(r,'lastError',null);
+    if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards · Worker v9',body:'账户 '+account+'；余额 '+mrNumber(snapshot.balance)+'；'+Object.values(state.notes).join(' · ')});
   }catch(err){
     const message=mrMessage(err);
-    if(scheduled){try{mrSave(r,'lastError',{message,at:Date.now()});}catch{}if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards 需要处理 · Worker v8',body:'账户 '+account+'；'+message});return;}
+    if(scheduled){try{mrSave(r,'lastError',{message,at:Date.now()});}catch{}if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards 需要处理 · Worker v9',body:'账户 '+account+'；'+message});return;}
     return mrError(ctx,message);
   }finally{
     if(scheduled&&lockId){try{if(mrLoad(r,'lock')?.id===lockId)mrSave(r,'lock',{until:0});}catch{}}
@@ -124,8 +124,8 @@ function mrCapture(r){
   }catch{notice('Cookie 保存失败，请检查 Egern 本地存储和脚本配置；原网页继续加载。');}
 }
 function mrEnabled(e,key,fallback=true){const v=e[key];return v===undefined||v===''?fallback:!['false','0','off','no'].includes(String(v).toLowerCase());}
-function mrLoad(r,key){const raw=r.ctx.storage.get(r.prefix+key);if(!raw)return null;try{return JSON.parse(raw);}catch{throw Error('本地状态损坏，请更换 ACCOUNT_ID 后重新配置');}}
-function mrSave(r,key,value){r.ctx.storage.set(r.prefix+key,JSON.stringify(value));}
+function mrLoad(r,key){let raw;try{raw=r.ctx.storage.get(r.prefix+key);}catch{throw mrFault('本地存储读取失败（'+key+'）');}if(!raw)return null;try{return JSON.parse(raw);}catch{throw Error('本地状态损坏，请更换 ACCOUNT_ID 后重新配置');}}
+function mrSave(r,key,value){try{r.ctx.storage.set(r.prefix+key,JSON.stringify(value));}catch{throw mrFault('本地存储写入失败（'+key+'）');}}
 function mrDay(tz){return new Intl.DateTimeFormat('en-CA',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
 function mrId(){if(typeof crypto!=='undefined'&&crypto.randomUUID)return crypto.randomUUID();return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const n=Math.floor(Math.random()*16);return(c==='x'?n:(n&3)|8).toString(16);});}
 function mrMessage(e){return e?.safe||e?.message==='本地状态损坏，请更换 ACCOUNT_ID 后重新配置'?String(e.safe||e.message):/^(缺少|请|本地|地区|无法|服务端|授权|登录|数据|网页|积分|本轮)/.test(e?.message||'')?e.message:'请求失败或存储不可用，请检查网络及 Egern 日志';}
@@ -154,7 +154,8 @@ async function mrRequest(r,method,url,kind,body,headers={}){
     if(kind==='bing'&&current.hostname!=='www.bing.com')sent.Cookie=String(sent.Cookie).split(';').map(x=>x.trim()).filter(x=>x&&!x.startsWith('__Host-')).join('; ');
     if(kind==='bing'&&sent.Referer){try{const ref=new URL(sent.Referer);if(bingHosts.includes(ref.hostname))sent.Referer=new URL(ref.pathname+ref.search,current.origin).href;}catch{}}
     const options={headers:sent,timeout:Math.min(8000,r.deadline-Date.now()),credentials:'omit',redirect:'manual',...(body!==undefined?{body}:{}),...(r.e.POLICY?{policy:r.e.POLICY}:{})};
-    const resp=await r.ctx.http[method.toLowerCase()](current.href,options);
+    let resp;
+    try{resp=await r.ctx.http[method.toLowerCase()](current.href,options);}catch(err){throw mrTransportFault(endpoint,err);}
     if(resp.status===401)throw mrFault(endpoint+'：HTTP 401，登录/授权未通过，请检查 '+credential,true);
     if(resp.status===403)throw mrFault(endpoint+'：HTTP 403，访问被拒绝；请检查网页登录验证、网络和 '+credential,true);
     if(resp.status>=300&&resp.status<400){
@@ -171,8 +172,13 @@ async function mrRequest(r,method,url,kind,body,headers={}){
     }
     if(resp.status<200||resp.status>=300){const fault=mrFault(endpoint+'：数据源 HTTP '+resp.status);fault.httpStatus=resp.status;throw fault;}
     if(kind==='bing')r.bingBase=current.origin;
-    return await resp.text();
+    try{return await resp.text();}catch(err){throw mrTransportFault(endpoint,err);}
   }
+}
+function mrTransportFault(endpoint,err){
+  // Classify only; never include native messages that may contain credentials or request URLs.
+  const message=String(err?.message||''),timeout=/timed?\s*out|timeout|超时/i.test(message);
+  return mrFault(endpoint+'：'+(timeout?'网络请求超时':'网络请求失败')+'，请检查 Egern 网络/策略及日志');
 }
 function mrJson(text){try{return JSON.parse(text);}catch{throw mrFault('数据源没有返回有效 JSON，可能需要重新登录',true);}}
 function mrNumeric(value){return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):null;}
@@ -236,9 +242,13 @@ async function mrApp(r,method,path,body){
   const j=mrJson(await mrRequest(r,method,MR_APP+path,'app',body===undefined?undefined:JSON.stringify(body),{'Content-Type':'application/json; charset=UTF-8',Authorization:'Bearer '+access,'x-rewards-appid':'SAAndroid/31.4.2110003555','x-rewards-ismobile':'true','x-rewards-country':country,'x-rewards-partnerid':'startapp','x-rewards-flights':'rwgobig'}));
   if(method==='GET'&&path.startsWith('/dapi/me?')){
     // Observed in the user's App response. It is NOT an independent mobile search quota.
-    const matches=(j.response?.promotions||[]).filter(p=>p.attributes?.type==='search'&&/^WW_search_global_/.test(p.attributes?.offerid||''));
+    const promotions=Array.isArray(j.response?.promotions)?j.response.promotions:[];
+    const matches=promotions.filter(p=>p?.attributes?.type==='search'&&/^WW_search_global_/.test(p.attributes?.offerid||''));
     const a=matches.length===1?matches[0].attributes:null,current=mrNumeric(a?.progress),max=mrNumeric(a?.max);
-    mrSave(r,'appSearch',current!==null&&max!==null&&current>=0&&max>=current?{current,max,at:Date.now(),day:mrDay(r.e.TIMEZONE||'Asia/Shanghai')}:null);
+    const valid=current!==null&&max!==null&&current>=0&&max>=current,at=Date.now(),day=mrDay(r.e.TIMEZONE||'Asia/Shanghai');
+    mrSave(r,'appSearch',valid?{current,max,at,day}:null);
+    const message=valid?'App 搜索 '+current+'/'+max:!Array.isArray(j.response?.promotions)?'App 未返回任务列表':matches.length===0?'App 返回 '+promotions.length+' 项任务，未匹配搜索额度':matches.length>1?'App 搜索匹配 '+matches.length+' 项，无法唯一识别':'App 搜索数值无效';
+    mrSave(r,'appSearchStatus',{message,at,day});
   }
   return j;
 }
@@ -311,7 +321,8 @@ async function mrSearch(r,s,snap){
   if(s.searchMisses>=2){s.notes.SEARCH='搜索进度连续未增长，今日停止';return;}
   if(!quota('pc')&&!quota('mobile')){
     const app=mrAppSearchObservation(r);
-    s.notes.SEARCH=app&&app.current===app.max?'App 搜索已满 '+app.current+'/'+app.max+'；未提交额外搜索':snap.pc.max===null||snap.mobile.max===null?'搜索额度未知，未提交':'搜索额度已完成';return;
+    const diagnostic=mrLoad(r,'appSearchStatus'),fresh=diagnostic?.day===s.day&&Number.isFinite(diagnostic.at)&&Date.now()>=diagnostic.at&&Date.now()-diagnostic.at<3600000;
+    s.notes.SEARCH=app&&app.current===app.max?'App 搜索已满 '+app.current+'/'+app.max+'；未提交额外搜索':snap.pc.max===null||snap.mobile.max===null?(app?'App 搜索 '+app.current+'/'+app.max+'；未取得独立设备额度':fresh?diagnostic.message:'App 搜索暂无有效查询记录')+'；未提交':'搜索额度已完成';return;
   }
   const mobile=quota('mobile')&&(!quota('pc')||s.searchIndex%2===1),counter=mobile?snap.mobile:snap.pc;
   const key='search:'+s.searchIndex;if(!mrPrepare(r,s,key))return;
@@ -369,4 +380,3 @@ function mrWidget(ctx,snap,state,status){
   return {type:'widget',url:MR_WEB+'/',padding:small?12:14,gap:small?5:large?10:7,backgroundGradient:{type:'linear',colors:['#101F39','#1A3353'],startPoint:{x:0,y:0},endPoint:{x:1,y:1}},refreshAfter,children};
 }
 function mrError(ctx,message){return {type:'widget',url:MR_WEB+'/',padding:ctx.widgetFamily?.startsWith('accessory')?0:14,gap:8,children:[mrTxt('Microsoft Rewards',14,'#74AFFF'),mrTxt(message,11,undefined,{maxLines:4})],refreshAfter:new Date(Date.now()+300000).toISOString()};}
-
