@@ -4,6 +4,7 @@
  * Generic queries/renders; schedule runs bounded tasks; request captures opt-in cookies.
  * Cookie capture revision: 2026-09-28.3 (tap notification to copy the full Cookie).
  * Widget revision: 2026-09-28.4 (natural-height sections and complete-counter fallback).
+ * Worker revision: 2026-09-28.5 (bounded regional redirects and endpoint diagnostics).
  */
 const MR_WEB='https://rewards.bing.com', MR_BING='https://www.bing.com';
 const MR_APP='https://prod.rewardsplatform.microsoft.com';
@@ -56,10 +57,10 @@ export default async function(ctx){
     // Never infer points from submitted task count.
     try{snapshot=await mrSnapshot(r);mrSave(r,'snapshot',snapshot);for(const p of [...snapshot.promos,...snapshot.earnTasks]){const action=state.actions['promo:'+p.id];if(action&&p.complete){action.status='活动已确认';state.notes.PROMOS='活动已确认（服务端）';}}}catch{state.notes.QUERY='任务后查询失败，保留上次数据';}
     state.lastRun=Date.now();mrSave(r,'state',state);
-    if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards',body:'余额 '+mrNumber(snapshot.balance)+'；'+Object.values(state.notes).join(' · ')});
+    if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards · Worker v5',body:'余额 '+mrNumber(snapshot.balance)+'；'+Object.values(state.notes).join(' · ')});
   }catch(err){
     const message=mrMessage(err);
-    if(scheduled){try{mrSave(r,'lastError',{message,at:Date.now()});}catch{}if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards 需要处理',body:message});return;}
+    if(scheduled){try{mrSave(r,'lastError',{message,at:Date.now()});}catch{}if(mrEnabled(e,'NOTIFY',false)&&ctx.notify)ctx.notify({title:'Microsoft Rewards 需要处理 · Worker v5',body:message});return;}
     return mrError(ctx,message);
   }finally{
     if(scheduled&&lockId){try{if(mrLoad(r,'lock')?.id===lockId)mrSave(r,'lock',{until:0});}catch{}}
@@ -106,22 +107,47 @@ function mrMessage(e){return e?.safe||e?.message==='本地状态损坏，请更�
 function mrFault(message,auth=false){const e=Error(message);e.safe=message;e.auth=auth;return e;}
 function mrForm(obj){return Object.entries(obj).map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(String(v))).join('&');}
 async function mrRequest(r,method,url,kind,body,headers={}){
-  const host=new URL(url).hostname;
-  if(!['rewards.bing.com','www.bing.com','prod.rewardsplatform.microsoft.com','login.live.com'].includes(host))throw mrFault('请求域名不在迁移脚本允许列表中');
-  if(Date.now()>r.deadline-2000)throw mrFault('本轮执行时间已用尽');
+  let current=new URL(url);
+  const bingHosts=['www.bing.com','cn.bing.com'];
+  const allowed={web:['rewards.bing.com'],bing:bingHosts,app:['prod.rewardsplatform.microsoft.com'],oauth:['login.live.com']};
+  const secure=u=>u.protocol==='https:'&&!u.port&&!u.username&&!u.password;
+  if(!secure(current)||!allowed[kind]?.includes(current.hostname))throw mrFault('请求域名不在迁移脚本允许列表中');
+  if(kind==='bing'&&r.bingBase)current=new URL(current.pathname+current.search,r.bingBase);
+  // The diagnostic identifies our initial endpoint, never a redirect query or response body.
+  const endpoint=method+' '+current.hostname+current.pathname;
+  const credential=kind==='web'?'REWARDS_COOKIE':kind==='bing'?'BING_COOKIE':'OAuth 授权';
   const h={'User-Agent':kind==='app'?MR_MOBILE:MR_PC,...headers};
   if(kind==='web'||kind==='bing'){
     const cookie=kind==='web'?r.e.REWARDS_COOKIE:r.e.BING_COOKIE;
     if(!cookie)throw mrFault('缺少 '+(kind==='web'?'REWARDS_COOKIE':'BING_COOKIE')+'，请打开配套 Cookie 获取链接或在 Env 填写',true);
     h.Cookie=headers.Cookie||cookie;
   }
-  // Explicit cookie routing. Never let redirects forward credentials off-domain.
-  const options={headers:h,timeout:Math.min(8000,r.deadline-Date.now()),credentials:'omit',redirect:'manual',...(body!==undefined?{body}:{}),...(r.e.POLICY?{policy:r.e.POLICY}:{})};
-  const resp=await r.ctx.http[method.toLowerCase()](url,options);
-  if(resp.status===401||resp.status===403)throw mrFault('登录或授权已过期（HTTP '+resp.status+'），请更新对应凭据',true);
-  if(resp.status>=300&&resp.status<400)throw mrFault('登录跳转：请更新 Cookie 后重试',true);
-  if(resp.status<200||resp.status>=300)throw mrFault('数据源 HTTP '+resp.status);
-  return await resp.text();
+  for(let hops=0;;hops++){
+    if(Date.now()>r.deadline-2000)throw mrFault('本轮执行时间已用尽');
+    // Captured Bing cookies originate at www. Never copy host-bound cookies to cn.
+    const sent={...h};
+    if(kind==='bing'&&current.hostname!=='www.bing.com')sent.Cookie=String(sent.Cookie).split(';').map(x=>x.trim()).filter(x=>x&&!x.startsWith('__Host-')).join('; ');
+    if(kind==='bing'&&sent.Referer){try{const ref=new URL(sent.Referer);if(bingHosts.includes(ref.hostname))sent.Referer=new URL(ref.pathname+ref.search,current.origin).href;}catch{}}
+    const options={headers:sent,timeout:Math.min(8000,r.deadline-Date.now()),credentials:'omit',redirect:'manual',...(body!==undefined?{body}:{}),...(r.e.POLICY?{policy:r.e.POLICY}:{})};
+    const resp=await r.ctx.http[method.toLowerCase()](current.href,options);
+    if(resp.status===401)throw mrFault(endpoint+'：HTTP 401，登录/授权未通过，请检查 '+credential,true);
+    if(resp.status===403)throw mrFault(endpoint+'：HTTP 403，访问被拒绝；请检查网页登录验证、网络和 '+credential,true);
+    if(resp.status>=300&&resp.status<400){
+      let next;try{const location=resp.headers.get('location');if(location)next=new URL(location,current);}catch{}
+      const detail=endpoint+'：HTTP '+resp.status+' → '+(next?.hostname||'无有效 Location');
+      if(next&&['login.live.com','login.microsoftonline.com','account.live.com'].includes(next.hostname))throw mrFault(detail+'，跳到登录/验证页，请重新登录并更新 '+credential,true);
+      if(method!=='GET'||body!==undefined)throw mrFault(detail+'；提交请求未自动重发');
+      if(![301,302,303,307,308].includes(resp.status)||!next||!secure(next))throw mrFault(detail+'；跳转目标不受支持');
+      const sameOrigin=next.origin===current.origin;
+      const regional=kind==='bing'&&bingHosts.includes(next.hostname)&&next.pathname===current.pathname;
+      if(!sameOrigin&&!regional)throw mrFault(detail+'；跨站或跨路径跳转已停止');
+      if(hops>=3)throw mrFault(detail+'；跳转次数超过 3 次，本轮停止');
+      current=next;continue;
+    }
+    if(resp.status<200||resp.status>=300)throw mrFault(endpoint+'：数据源 HTTP '+resp.status);
+    if(kind==='bing')r.bingBase=current.origin;
+    return await resp.text();
+  }
 }
 function mrJson(text){try{return JSON.parse(text);}catch{throw mrFault('数据源没有返回有效 JSON，可能需要重新登录',true);}}
 function mrNumeric(value){return value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value))?Number(value):null;}
@@ -229,11 +255,13 @@ async function mrSearch(r,s,snap){
   const key='search:'+s.searchIndex;if(!mrPrepare(r,s,key))return;
   const custom=String(r.e.SEARCH_TERMS||'').split('|').map(x=>x.trim()).filter(Boolean);
   const words=custom.length?custom:['今日科技新闻','天文观测','城市天气','自然摄影','开源软件','历史博物馆','世界地理','森林生态','咖啡制作','阅读推荐','太空探索','旅行路线'];
-  const term=words[s.searchIndex%words.length]+' '+s.day+' '+(s.searchIndex+1),query=MR_BING+'/search?'+mrForm({q:term,form:'QBLH',...(mrEnabled(r.e,'LOCK_CN')?{mkt:'zh-CN'}:{})});
+  const term=words[s.searchIndex%words.length]+' '+s.day+' '+(s.searchIndex+1);
+  let query=(r.bingBase||MR_BING)+'/search?'+mrForm({q:term,form:'QBLH',...(mrEnabled(r.e,'LOCK_CN')?{mkt:'zh-CN'}:{})});
   const ua=mobile?MR_MOBILE:MR_PC;
   const cookie=String(r.e.BING_COOKIE||'').split(';').map(x=>x.trim()).filter(x=>x&&!/^(_EDGE_S|_RwBf|_Rwho)=/.test(x)).join('; ')+'; _Rwho=u='+(mobile?'m':'d')+'&ts='+s.day;
   const searchHeaders={'User-Agent':ua,Cookie:cookie};
   const html=await mrRequest(r,'GET',query,'bing',undefined,{...searchHeaders,Referer:MR_BING+'/'});
+  query=new URL(new URL(query).pathname+new URL(query).search,r.bingBase||MR_BING).href;
   const ig=html.match(/\bIG\s*:\s*"([A-Fa-f0-9]+)"/)?.[1];
   if(ig){
     const base='?IG='+encodeURIComponent(ig)+'&IID=SERP.5047&ajaxreq=1';
@@ -271,4 +299,3 @@ function mrWidget(ctx,snap,state,status){
   return {type:'widget',url:MR_WEB+'/',padding:small?12:14,gap:small?5:large?12:7,backgroundGradient:{type:'linear',colors:['#101F39','#1A3353'],startPoint:{x:0,y:0},endPoint:{x:1,y:1}},refreshAfter:new Date(Date.now()+1800000).toISOString(),children};
 }
 function mrError(ctx,message){return {type:'widget',url:MR_WEB+'/',padding:ctx.widgetFamily?.startsWith('accessory')?0:14,gap:8,children:[mrTxt('Microsoft Rewards',14,'#74AFFF'),mrTxt(message,11,undefined,{maxLines:4})],refreshAfter:new Date(Date.now()+1800000).toISOString()};}
-
