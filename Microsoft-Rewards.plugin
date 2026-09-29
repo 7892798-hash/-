@@ -1,0 +1,44 @@
+#!name = Microsoft Rewards · Loon
+#!desc = 微软积分签到、阅读、活动、搜索；全部启用任务确认完成后当天停止联网。提供手动查询和凭据捕获，无小组件。首次填写参数并验证后打开自动任务。
+#!author = Personal port; upstream zxwbn01
+#!homepage = https://github.com/7892798-hash/-/blob/main/LOON-README.md
+#!system = iOS,iPadOS
+#!system_version = 15
+#!loon_version = 3.5.1(983)
+#!tag = Microsoft,Rewards
+#!type = normal
+
+[Argument]
+ACCOUNT_ID = input,"personal",tag=账户标识,desc=本地存储分组名称。不是微软账户ID；捕获与任务必须相同。
+AUTO_RUN = switch,false,tag=自动任务,desc=配置并手动验证后开启。
+CRON = input,"*/20 * * * *",tag=任务计划,desc=默认每20分钟分批执行；当天确认完成后不再联网。
+CAPTURE = switch,true,tag=凭据捕获,desc=只匹配说明中的专用链接；获取完成后可关闭。
+REWARDS_COOKIE = input,tag=Rewards Cookie,desc=可留空使用本插件捕获值；手填值优先。
+BING_COOKIE = input,tag=Bing Cookie,desc=可留空使用本插件捕获值；手填值优先。
+AUTH_CODE = input,tag=OAuth授权码,desc=点按授权捕获通知复制后填入；一次性使用。已有有效刷新令牌时可留空。
+REFRESH_TOKEN = input,tag=OAuth刷新令牌,desc=与AUTH_CODE二选一；成功授权后脚本会在本地保存续期令牌。
+AUTH_REVISION = input,"1",tag=授权版本,desc=重新授权或替换刷新令牌时递增为2或3；同时清空过期的REFRESH_TOKEN。
+TASK_SIGN = switch,true,tag=签到任务
+TASK_READ = switch,true,tag=阅读任务
+TASK_PROMOS = switch,true,tag=活动任务
+TASK_SEARCH = switch,true,tag=搜索任务
+POWER_SAVE = switch,true,tag=完成后停止联网,desc=保留开启；全部启用任务确认完成后当天零网络请求。
+NOTIFY = switch,false,tag=任务结果通知,desc=首次验证时打开；关闭后仅手动查询与凭据捕获通知。
+LOCK_CN = switch,true,tag=中国地区检查,desc=无法确认CN时不提交任务。
+COUNTRY = input,"cn",tag=账户地区,desc=默认cn；与实际账户地区保持一致。
+TIMEZONE = input,"Asia/Shanghai",tag=任务日期时区,desc=默认中国时区；不改变Loon计划自身使用的系统时间。
+TIMEZONE_OFFSET = input,"-480",tag=活动时区偏移,desc=中国时区为-480分钟。
+POLICY = input,tag=请求策略,desc=留空使用Loon默认策略；也可填写已有策略组名称。
+SEARCH_TERMS = input,tag=搜索词,desc=可选；多项使用竖线分隔。
+EARN_ACTION_ID = input,tag=网页活动Action,desc=通常留空；仅网页部署变化且活动接口404时按实测结果更新。
+
+[Script]
+cron ${CRON} then script("https://raw.githubusercontent.com/7892798-hash/-/main/ms-rewards-loon-worker.js", {${ACCOUNT_ID},${REWARDS_COOKIE},${BING_COOKIE},${AUTH_CODE},${REFRESH_TOKEN},${AUTH_REVISION},${TASK_SIGN},${TASK_READ},${TASK_PROMOS},${TASK_SEARCH},${POWER_SAVE},${NOTIFY},${LOCK_CN},${COUNTRY},${TIMEZONE},${TIMEZONE_OFFSET},${POLICY},${SEARCH_TERMS},${EARN_ACTION_ID}}) with enable=${AUTO_RUN}, tag="微软积分 · 自动任务", timeout=180
+generic then script("https://raw.githubusercontent.com/7892798-hash/-/main/ms-rewards-loon-worker.js", {${ACCOUNT_ID},${REWARDS_COOKIE},${BING_COOKIE},${AUTH_CODE},${REFRESH_TOKEN},${AUTH_REVISION},${TASK_SIGN},${TASK_READ},${TASK_PROMOS},${TASK_SEARCH},${POWER_SAVE},${NOTIFY},${LOCK_CN},${COUNTRY},${TIMEZONE},${TIMEZONE_OFFSET},${POLICY},${SEARCH_TERMS},${EARN_ACTION_ID}}) with tag="微软积分 · 执行一轮", timeout=180
+generic then script("https://raw.githubusercontent.com/7892798-hash/-/main/ms-rewards-loon-query.js", {${ACCOUNT_ID},${REWARDS_COOKIE},${TIMEZONE},${POLICY}}) with tag="微软积分 · 查询进度", timeout=60
+request if ${url} ~= /^https:\/\/rewards\.bing\.com\/(?:earn)?\?(?:[^#]*&)?loon_capture=1(?:&|$)/ && ${request.method} == "GET" then script("https://raw.githubusercontent.com/7892798-hash/-/main/ms-rewards-loon-capture.js", {${ACCOUNT_ID}}) with enable=${CAPTURE}, tag="微软积分 · Rewards Cookie", timeout=5
+request if ${url} ~= /^https:\/\/www\.bing\.com\/\?(?:[^#]*&)?loon_capture=1(?:&|$)/ && ${request.method} == "GET" then script("https://raw.githubusercontent.com/7892798-hash/-/main/ms-rewards-loon-capture.js", {${ACCOUNT_ID}}) with enable=${CAPTURE}, tag="微软积分 · Bing Cookie", timeout=5
+request if ${url} ~= /^https:\/\/login\.live\.com\/oauth20_desktop\.srf\?(?:[^#]*&)?state=loon_rewards_auth_v1(?:&|$)/ && ${request.method} == "GET" then script("https://raw.githubusercontent.com/7892798-hash/-/main/ms-rewards-loon-capture.js", {${ACCOUNT_ID}}) with enable=${CAPTURE}, tag="微软积分 · OAuth授权码", timeout=5
+
+[Mitm]
+hostname = rewards.bing.com,www.bing.com,login.live.com
