@@ -15,8 +15,8 @@ CRON = input,"*/20 * * * *",tag=任务计划,desc=默认每20分钟分批执行�
 CAPTURE = switch,true,tag=凭据捕获,desc=只匹配说明中的专用链接；获取完成后可关闭。
 REWARDS_COOKIE = input,tag=Rewards Cookie,desc=可留空使用本插件捕获值；手填值优先。
 BING_COOKIE = input,tag=Bing Cookie,desc=可留空使用本插件捕获值；手填值优先。
-AUTH_CODE = input,tag=OAuth授权码,desc=点按授权捕获通知复制后填入；一次性使用。已有有效刷新令牌时可留空。
-REFRESH_TOKEN = input,tag=OAuth刷新令牌,desc=与AUTH_CODE二选一；成功授权后脚本会在本地保存续期令牌。
+AUTH_CODE = input,tag=OAuth授权码,desc=通常留空；v2自动读取本地捕获的授权码。手填值优先。
+REFRESH_TOKEN = input,tag=OAuth刷新令牌,desc=通常留空；成功授权后脚本自动保存续期令牌。手填值优先。
 AUTH_REVISION = input,"1",tag=授权版本,desc=重新授权或替换刷新令牌时递增为2或3；同时清空过期的REFRESH_TOKEN。
 TASK_SIGN = switch,true,tag=签到任务
 TASK_READ = switch,true,tag=阅读任务

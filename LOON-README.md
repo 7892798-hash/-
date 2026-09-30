@@ -1,4 +1,6 @@
-# Microsoft Rewards · Loon v1
+# Microsoft Rewards · Loon v2
+
+v2 修复授权码未自动保存的问题。已有 v1 用户只需替换远程 `ms-rewards-loon-capture.js` 与 `ms-rewards-loon-worker.js` 并更新 Loon 脚本缓存；插件订阅地址不变。新版插件仅更新参数说明，查询脚本兼容旧版。
 
 从当前 Egern v11 迁移，保留签到、阅读、活动、搜索及每日完成后停止联网；没有小组件，也没有 12:00 / 18:00 的小组件刷新任务。原 Egern 文件继续保留。
 
@@ -51,9 +53,15 @@ https://raw.githubusercontent.com/7892798-hash/-/main/Microsoft-Rewards.plugin
 
 [微软 Rewards 授权并捕获 AUTH_CODE](https://login.live.com/oauth20_authorize.srf?client_id=0000000040170455&redirect_uri=https%3A%2F%2Flogin.live.com%2Foauth20_desktop.srf&response_type=code&scope=service%3A%3Aprod.rewardsplatform.microsoft.com%3A%3AMBI_SSL&state=loon_rewards_auth_v1)
 
-完成登录/授权后，点按 Loon 通知复制授权码，填入插件 `AUTH_CODE`，尽快执行一轮。授权码一次性使用，不能照搬已被 Egern 消耗的旧码。成功换取令牌后，脚本本地保存续期令牌，后续自动续期；捕获阶段本身不换取令牌。
+完成登录/授权后，Loon v2 通知显示 **AUTH_CODE 已保存至账户 personal**。保持插件 `AUTH_CODE`、`REFRESH_TOKEN` 两项留空，**5 分钟内手动执行一轮**，即可自动读取已捕获授权码，换取并保存续期令牌，后续自动续期。不要等默认 20 分钟计划，以免一次性授权码过期。
 
-已有仍有效的 `REFRESH_TOKEN` 也可以直接填写，与 `AUTH_CODE` 二选一；有效的已存本地令牌优先。重新授权时，清空过期的 `REFRESH_TOKEN`，填新 `AUTH_CODE`，将 `AUTH_REVISION` 从 1 改成 2（以后继续递增），让旧本地令牌失效。
+这里保存到 Loon 本地存储，不会回填插件参数界面；两个输入框空白是正常的。捕获阶段不发起令牌交换，也不额外执行积分任务。仍保留点按通知复制，以便本地保存失败时手填恢复。
+
+成功兑换后不再保留授权码原文，后续使用续期令牌。兑换请求超时或结果不确定时不会反复提交同一码，请重新打开授权链接获取新码。旧版 v1 没保存过的授权码无法补取，升级后需重新授权一次。授权码不能与 Egern 重复使用。
+
+重新自动授权：保持两项 OAuth 参数留空，再打开上述授权链接捕获新码即可；新码会替换本账户之前的授权记录，不需要手动修改 `AUTH_REVISION`。
+
+仍支持手动填写有效 `REFRESH_TOKEN` 或 `AUTH_CODE`；手填模式优先于自动捕获模式，手填模式中有效的已存令牌优先。手动重新授权时，清空过期的 `REFRESH_TOKEN`，填新 `AUTH_CODE`，将 `AUTH_REVISION` 从 1 改成 2（以后继续递增）。要恢复自动捕获模式，请将两项 OAuth 参数都清空。
 
 Cookie 中没有 AUTH_CODE 或 REFRESH_TOKEN；不要把遥测 ID、账户标识或普通 Cookie 值填入 OAuth 字段。
 
