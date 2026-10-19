@@ -1,0 +1,15 @@
+#!name = 中国银行预选卡号与制卡进度
+#!desc = 打开中行申请查询结果页后显示预选卡号、制卡状态及复制按钮。无需Cookie、定时任务或账号参数。首次安装后重新加载页面。
+#!author = Personal Loon adaptation; source ucuw/rules
+#!homepage = https://github.com/7892798-hash/-/blob/main/BOC-README.md
+#!system = iOS,iPadOS
+#!system_version = 15
+#!loon_version = 3.5.1(983)
+#!tag = 中国银行,制卡查询
+#!type = normal
+
+[Script]
+response if ${url} ~= /^https:\/\/open\.boc\.cn\/bankcard\/cardReserve(?:\/|\?|$)/ && ${response.status} == 200 && ${response.header['Content-Type']} ~= /^text\/html(?:\s*;|\s*$)/i then script("https://raw.githubusercontent.com/7892798-hash/-/main/boc-loon.js") with tag="中行制卡信息 · 页面注入", requires_body=true, timeout=5
+
+[Mitm]
+hostname = open.boc.cn
