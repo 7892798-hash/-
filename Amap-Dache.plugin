@@ -1,0 +1,28 @@
+#!name = 高德打车签到
+#!desc = 自动获取并保存登录信息，支持手动及每日定时签到。按当前上游执行APP端活动；确认签到后当天不重复请求。先获取凭据并验证后开启自动签到。
+#!author = wf021325/qx protocol; Personal Loon adaptation
+#!homepage = https://github.com/7892798-hash/-/blob/main/AMAP-DACHE-README.md
+#!system = iOS,iPadOS
+#!system_version = 15
+#!loon_version = 3.5.1(983)
+#!tag = 高德,签到
+#!type = normal
+
+[Argument]
+ACCOUNT_ID = input,"personal",tag=账户标识,desc=本地存储分组名；获取登录信息与签到需使用同一个值。
+CAPTURE = switch,true,tag=获取登录信息,desc=打开高德打车福利中心自动保存；成功后可关闭。
+AUTO_RUN = switch,false,tag=自动签到,desc=先手动验证成功再开启。
+CRON = input,"1 0 * * *",tag=签到时间,desc=默认每天00:01；按Loon系统时区调度。
+GD_VAL = input,tag=手动登录信息,desc=通常留空自动读取捕获值；手填时为含userId、adiu、sessionid的JSON。
+POLICY = input,tag=请求策略,desc=留空使用默认策略；可填已有策略名称。
+ACT_ID = input,"5DRBxfzndQq",tag=活动ID,desc=沿用上游APP端活动；提示活动变化时才按实测结果更新。
+PLAY_ID = input,"5DRBxfFiaXN",tag=签到玩法ID,desc=需与活动ID对应。
+
+[Script]
+response if ${url} ~= /^https:\/\/m5(?:-zb)?\.amap\.com\/ws\/yuece\/(?:act|openapi\/activity\/current)\/query(?:\?|$)/ && ${response.status} == 200 then script("https://raw.githubusercontent.com/7892798-hash/-/main/amap-dache-loon.js", {${ACCOUNT_ID}}) with enable=${CAPTURE}, tag="高德打车 · APP获取登录信息", requires_body=true, timeout=5
+request if ${url} ~= /^https:\/\/dache\.amap\.com\/common\/(?:alipaymini|wxmini)\?(?:[^#]*&)?_ENCRYPT=[^&]+/ then script("https://raw.githubusercontent.com/7892798-hash/-/main/amap-dache-loon.js", {${ACCOUNT_ID}}) with enable=${CAPTURE}, tag="高德打车 · 小程序获取登录信息", timeout=5
+cron ${CRON} then script("https://raw.githubusercontent.com/7892798-hash/-/main/amap-dache-loon.js", {${ACCOUNT_ID},${GD_VAL},${POLICY},${ACT_ID},${PLAY_ID}}) with enable=${AUTO_RUN}, tag="高德打车 · 每日签到", timeout=60
+generic then script("https://raw.githubusercontent.com/7892798-hash/-/main/amap-dache-loon.js", {${ACCOUNT_ID},${GD_VAL},${POLICY},${ACT_ID},${PLAY_ID}}) with tag="高德打车 · 签到一次", timeout=60
+
+[Mitm]
+hostname = m5.amap.com,m5-zb.amap.com,dache.amap.com
