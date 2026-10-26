@@ -1,0 +1,19 @@
+#!name=航旅纵横净化（墨鱼规则·Loon适配）
+#!desc=移植墨鱼去广告规则。GitHub远程脚本版。仅清理广告和营销，不解锁会员。
+#!author=原规则 @ddgksf2013；Loon API 适配
+#!homepage=https://github.com/7892798-hash/-/blob/main/UMETRIP-README.md
+#!date=2026-10-26
+
+# 源配置 V1.0.3，2026-10-05；脚本快照 2026-10-26。
+# 远程脚本随本插件下载；请停用旧的本地脚本版，避免同一接口重复匹配。
+# 需已启用 Loon 复写、脚本及相应 MITM；不要与其他航旅纵横响应脚本重复启用。
+# 本仓库快照不会自动跟随原作者更新。未在 iOS Loon/航旅纵横真机测试。
+
+[URL Rewrite]
+^https:\/\/oss\.umetrip\.com\/fs\/advert\/ reject-img
+
+[Script]
+http-response ^https:\/\/(?:sns|appmsg|home|umehome|opactivity|activity|umerp|flightstatus|umeflightstatus|startup|umestartup|user|umeuser|event)\.umetrip\.com\/gateway\/api\/umetrip\/native(?:\?.*)?$ script-path=https://raw.githubusercontent.com/7892798-hash/-/main/umetrip.ads.loon.js,requires-body=true,binary-body-mode=true,timeout=10,tag=航旅纵横净化,enable=true
+
+[MITM]
+hostname = sns.umetrip.com, appmsg.umetrip.com, home.umetrip.com, umehome.umetrip.com, opactivity.umetrip.com, activity.umetrip.com, umerp.umetrip.com, flightstatus.umetrip.com, umeflightstatus.umetrip.com, startup.umetrip.com, umestartup.umetrip.com, user.umetrip.com, umeuser.umetrip.com, event.umetrip.com, oss.umetrip.com
