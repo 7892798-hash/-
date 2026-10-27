@@ -1,0 +1,23 @@
+#!name=腾讯视频净化（ZenMoFiShi · Loon适配）
+#!desc=需先上传配套 Txvideoad.loon.js 到指定 GitHub 仓库。去广告与界面净化；保留源脚本 App 内网络配置及青少年提示调整，不解锁会员。
+#!author=原规则 TG@ZenMoFiShi；Loon API 适配
+#!homepage=https://github.com/ZenmoFeiShi/Qx
+#!date=2026-10-27
+
+# 远程部署版：本文件和 Txvideoad.loon.js 必须先上传到 7892798-hash/- 的 main 根目录。
+# 本次仅生成文件，尚未发布；上传后再以 Raw 链接导入。
+# 采用 Loon 传统脚本语法；请求和三条响应为二进制，rdelivery 响应为文本。
+
+[Rule]
+DOMAIN,iacc.stgw.qq.com,REJECT
+DOMAIN,tacc.video.qq.com,REJECT
+
+[Script]
+http-request ^https?:\/\/i\.video\.qq\.com\/(?:\?.*)?$ script-path=https://raw.githubusercontent.com/7892798-hash/-/main/Txvideoad.loon.js,requires-body=true,binary-body-mode=true,timeout=20,tag=腾讯视频请求净化,enable=true
+http-response ^https?:\/\/i\.video\.qq\.com\/(?:\?.*)?$ script-path=https://raw.githubusercontent.com/7892798-hash/-/main/Txvideoad.loon.js,requires-body=true,binary-body-mode=true,timeout=20,tag=腾讯视频TRPC响应净化,enable=true
+http-response ^https?:\/\/iacc\.qq\.com\/(?:\?.*)?$ script-path=https://raw.githubusercontent.com/7892798-hash/-/main/Txvideoad.loon.js,requires-body=true,binary-body-mode=true,timeout=20,tag=腾讯视频JCE响应净化,enable=true
+http-response ^https?:\/\/config\.ab\.qq\.com\/tab\/GetTabRemoteConfig(?:\?.*)?$ script-path=https://raw.githubusercontent.com/7892798-hash/-/main/Txvideoad.loon.js,requires-body=true,binary-body-mode=true,timeout=20,tag=腾讯视频底栏配置净化,enable=true
+http-response ^https:\/\/rdelivery\.qq\.com\/v1\/sdkconfig\/get(?:\?.*)?$ script-path=https://raw.githubusercontent.com/7892798-hash/-/main/Txvideoad.loon.js,requires-body=true,binary-body-mode=false,timeout=20,tag=腾讯视频SDK配置净化,enable=true
+
+[MITM]
+hostname = i.video.qq.com, iacc.qq.com, config.ab.qq.com, rdelivery.qq.com
